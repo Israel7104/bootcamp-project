@@ -6,10 +6,20 @@ We can add tasks, see tasks, mark as completed the tasks, delete tasks and see o
 
 
 
-![](docs/design/home.png)
-TaskFlow home page displaying the main interface with a left sidebar containing navigation menu items (All tasks, Important, Stats, Categories with Cat1 and Cat2), and a User profile section at the bottom. The main content area shows the TaskFlow heading with an add task input field and Add task button. Below is an expanded task detail showing Task 1 with checkboxes, a Big picture label, and a Description field. A vertical line connects the task to text reading Not completed, indicating the task status.
+## Home Page
 
+![TaskFlow home page interface showing left navigation sidebar with menus for All tasks, Important, Stats, and Categories. Main area displays task creation field and expanded Task 1 with completion status indicator.](docs/design/home.png)
 
-![TaskFlow task management interface showing the main add task workflow. The left sidebar displays navigation options including All tasks, Important, Stats, Categories (Cat1, Cat2), and User profile. The main content area shows a task input field labeled Writing with an Add task button. Below is a form with Description field and category selection dropdown. A sample Task 1 is visible with a checkbox and description field for entering task details.](docs/design/add_task.png)
+The home page displays all your tasks in one central location. The left sidebar provides quick navigation to different views including All tasks, Important, Stats, and Categories. Each task shows its current status with visual indicators for completion. You can expand any task to see more details and manage it.
 
-![TaskFlow stats dashboard displaying task completion metrics. The main panel shows Stats as the page title with two key metrics: Total tasks: 23 and Completed tasks: 9. The left sidebar contains the same navigation menu with Stats highlighted in blue, including All tasks, Important, Categories (Cat1, Cat2), and User profile section at the bottom.](docs/design/stats.png)
+## Add Task
+
+![TaskFlow add task form showing input field with description and category dropdown selection options.](docs/design/add_task.png)
+
+Adding a new task is simple and intuitive. Enter the task name in the input field, add a detailed description if needed, and select a category from the dropdown. This workflow keeps your tasks organized and helps you categorize them for better management.
+
+## Statistics Dashboard
+
+![TaskFlow stats dashboard showing metrics for total tasks and completed tasks.](docs/design/stats.png)
+
+Track your productivity with the Statistics page. View your total number of tasks and how many you've completed. This gives you a quick overview of your progress and helps motivate you to complete more tasks.
