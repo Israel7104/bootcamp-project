@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow Mobile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>TaskFlow Mobile</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+
+        <!-- adding tasks to the task list -->
+        <section>
+            <form action="">
+                <div class="form-row">
+                    <div class="form-group flex-grow">
+                        <label for="task">Task:</label>
+                        <input type="text" id="task" name="task" placeholder="Writing task...">
+                    </div>
+                    <div class="form-group">
+                        <label for="task-submit">&nbsp;</label>
+                        <input type="submit" id="task-submit" value="Add task">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" rows="5" placeholder="Add description..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">Add Category:</label>
+                    <input type="text" id="tags" name="tags" placeholder="Enter category...">
+                </div>
+            </form>
+        </section>
+        <!-- Task template -->
+        <template id="taskTemplate">
+            <li class="task-item">
+                <input type="checkbox" class="task-checkbox">
+                <div class="task-content">
+                    <h3 class="task-title"></h3>
+                    <p class="task-description"></p>
+                </div>
+                <span class="task-status"></span>
+            </li>
+        </template>
+        <!-- Task list section -->
+        <section class="tasks-list">
+            <ul id="tasksList">
+            </ul>
+        </section>
+
+    </main>
+            <aside>
+            <p>All tasks</p>
+            <p>Pending tasks</p>
+            <p>Completed tasks</p>
+            <p>Categories</p>
+            <ul>
+                <li>Work</li>
+                <li>Personal</li>
+                <li>Shopping</li>
+            </ul>
+        </aside>
+    <footer>
+        <!-- <p>&copy; 2024 Your Company. All rights reserved.</p> -->
+    </footer>
+</body>
+</html>
