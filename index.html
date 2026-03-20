@@ -1,113 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskFlow Mobile</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
 </head>
-<body>
-    <header>
-        <h1>TaskFlow Mobile</h1>
-        <nav>
+
+<body class=" min-h-screen bg-gray-100 dark:bg-gray-900">
+    <header class="bg-blue-600 text-white p-4 dark:bg-gray-800">
+        <h1 class="text-xl font-bold">TaskFlow Mobile</h1>
+        <nav class="mt-2">
             <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="#" class="hover:bg-blue-500 p-2 rounded">Inicio</a></li>
+
             </ul>
+            <br>
+            <button id="darkModeToggle"
+                class="ml-2 bg-gray-200 text-gray-800 hover:bg-gray-300 p-2 rounded transiton-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                Modo Oscuro
+            </button>
         </nav>
     </header>
     <main>
 
         <!-- adding tasks to the task list -->
-        <section>
-            <form action="">
+        <section class="p-4">
+            <form action="" class="flex flex-col gap-4">
                 <div class="form-row">
                     <div class="form-group flex-grow">
-                        <label for="task">Task:</label>
-                        <input type="text" id="task" name="task" placeholder="Writing task...">
+                        <label for="task" class="block text-sm font-medium text-gray-700">Tarea:</label>
+                        <input type="text" id="task" name="task" placeholder="Escribiendo tarea..."
+                            class="mt-1 block w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 sm:text-sm">
                     </div>
                     <div class="form-group">
                         <label for="task-submit">&nbsp;</label>
-                        <input type="submit" id="task-submit" value="Add task">
+                        <input type="submit" id="task-submit" value="Añadir tarea"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea id="description" name="description" rows="5" placeholder="Add description..."></textarea>
+
                 </div>
 
                 <div class="form-group">
-                    <label for="tags">Add Category:</label>
-                    <input type="text" id="tags" name="tags" placeholder="Enter category...">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Descripción:</label>
+                    <textarea id="description" name="description" rows="5" placeholder="Añadir descripción..."
+                        class="mt-1 block w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 sm:text-sm"></textarea>
+                </div>
+
+                <!-- <div class="form-group">
+                    <label for="tags" class="block text-sm font-medium text-gray-700">Add Category:</label>
+                    <input type="text" id="tags" name="tags" placeholder="Enter category..." class="mt-1 block w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 sm:text-sm">
+                </div> -->
+                <div class="form-group">
+                    <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Añadir
+                        categoría:</label>
+                    <select id="tags" name="tags"
+                        class="mt-1 block w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md p-2">
+                        <option value="" disabled selected>Seleccionar categoría...</option>
+                        <option value="Work">Trabajo</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Shopping">Compras</option>
+                    </select>
                 </div>
             </form>
         </section>
         <!-- Search bar -->
-        <section class="search-section">
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Buscar tareas...">
-                <button id="markAllCompleteBtn" class="mark-all-btn" title="Marcar todas como completadas">
-                    ✓ Marcar todas
+        <section class="search-section p-4">
+            <div class="search-container flex items-center gap-2">
+                <input type="text" id="searchInput" placeholder="Buscar tareas..."
+                    class="w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 sm:text-sm">
+                <button id="markAllCompleteBtn" class="mark-all-btn" title="Marcar todas como completadas"
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                    ✓ Marcar todas como completadas
                 </button>
-                <button id="deleteCompletedBtn" class="delete-completed-btn" title="Eliminar todas las completadas">
+                <button id="deleteCompletedBtn" class="delete-completed-btn" title="Eliminar todas las completadas"
+                    class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
                     🗑 Eliminar completadas
                 </button>
             </div>
         </section>
         <!-- Task template -->
-        <template id="taskTemplate">
-            <li class="task-item">
-                <input type="checkbox" class="task-checkbox">
-                <div class="task-content">
-                    <h3 class="task-title"></h3>
-                    <p class="task-description"></p>
+        <template id="taskTemplate" class="hidden">
+            <li class="task-item" data-id="" data-category="">
+                <input type="checkbox" class="task-checkbox" data-id="">
+                <div class="task-content" data-id="">
+                    <h3 class="task-title "></h3>
+                    <p class="task-description "></p>
                 </div>
-                <span class="task-status"></span>
+                <span class="task-status "></span>
             </li>
         </template>
         <!-- Task list section -->
         <section class="tasks-list">
-            <ul id="tasksList">
+            <ul id="tasksList" class="tasks-list-ul">
             </ul>
         </section>
 
     </main>
-            <aside>
-            <div class="filter-section">
-                <p id="all-tasks-btn" class="filter-btn active">
-                    All tasks
-                    <span class="counter" id="all-tasks-count">0</span>
+    <aside class="sidebar p-4 bg-gray-100 dark:bg-gray-700">
+        <p class="filters-title mb-2">Filtros</p>
+        <!-- <div class="filter-section mb-4">
+                <p id="all-tasks-btn" class="filter-btn active mb-2">
+                    Todas las tareas
+                    <span class="counter" id="all-tasks-count" >0</span>
                 </p>
-                <p id="pending-tasks-btn" class="filter-btn">
-                    Pending tasks
+                <p id="pending-tasks-btn" class="filter-btn mb-2">
+                    Tareas pendientes
                     <span class="counter" id="pending-tasks-count">0</span>
                 </p>
-                <p id="completed-tasks-btn" class="filter-btn">
-                    Completed tasks
-                    <span class="counter" id="completed-tasks-count">0</span>
+                <p id="completed-tasks-btn" class="filter-btn mb-2">
+                    Tareas completadas
+                    <span class="counter " id="completed-tasks-count">0</span>
                 </p>
-            </div>
-            <p class="categories-title">Categories</p>
-            <ul id="categoriesList" class="categories-list">
-                <li class="category-item" data-category="All">
-                    All Categories
-                </li>
-                <li class="category-item" data-category="Work">
-                    Work
-                </li>
-                <li class="category-item" data-category="Personal">
-                    Personal
-                </li>
-                <li class="category-item" data-category="Shopping">
-                    Shopping
-                </li>
-            </ul>
-        </aside>
-    <footer>
-        <!-- <p>&copy; 2024 Your Company. All rights reserved.</p> -->
+            </div> -->
+        <div class="filter-section mb-4">
+            <button id="all-tasks-btn" class="filter-btn active mb-2 w-full text-left" tabindex="0">
+                All tasks <span class="counter" id="all-tasks-count">0</span>
+            </button>
+            <button id="pending-tasks-btn" class="filter-btn mb-2 w-full text-left" tabindex="0">
+                Pending tasks <span class="counter" id="pending-tasks-count">0</span>
+            </button>
+            <button id="completed-tasks-btn" class="filter-btn mb-2 w-full text-left" tabindex="0">
+                Completed tasks <span class="counter" id="completed-tasks-count">0</span>
+            </button>
+        </div>
+
+        <!-- <p class="categories-title ">Categorías</p>
+        <ul id="categoriesList" class="categories-list mb-4">
+            <li class="category-item " data-category="All">
+                Todas las categorías
+            </li>
+            <li class="category-item " data-category="Work">
+                Trabajo
+            </li>
+            <li class="category-item " data-category="Personal">
+                Personal
+            </li>
+            <li class="category-item " data-category="Shopping">
+                Compras
+            </li>
+        </ul> -->
+        <p class="categories-title ">Categorías</p>
+        <ul id="categoriesList" class="categories-list mb-4">
+            <li class="category-item " data-category="All" tabindex="0">
+                Todas las categorías
+            </li>
+            <li class="category-item " data-category="Work" tabindex="0">
+                Trabajo
+            </li>
+            <li class="category-item " data-category="Personal" tabindex="0">
+                Personal
+            </li>
+            <li class="category-item " data-category="Shopping" tabindex="0">
+                Compras
+            </li>
+        </ul>
+    </aside>
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        <a href="#" class="hover:bg-blue-500 p-2 rounded">Acerca de</a>
+        <a href="#" class="hover:bg-blue-500 p-2 rounded">Contacto</a>
     </footer>
     <script src="app.js"></script>
 </body>
+
 </html>

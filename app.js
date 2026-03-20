@@ -154,7 +154,7 @@ function toggleTaskCompletion(task) {
 
 // Función para editar el título de una tarea
 function editTaskTitle(task) {
-    const newTitle = prompt("Editar título:", task.title);
+    const newTitle = prompt("Edit title:", task.title);
     
     // El usuario pulsa Cancelar o deja el campo vacío
     if (newTitle === null) {
@@ -163,7 +163,7 @@ function editTaskTitle(task) {
     
     // Validar que no esté vacío
     if (newTitle.trim() === "") {
-        alert("El título no puede estar vacío");
+        alert("The title cannot be empty. Please enter a valid title.");
         return;
     }
     
@@ -426,7 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const title = getElement("task").value;
         const description = getElement("description").value;
-        const tag = getElement("tags").value || "Sin categoría";
+        const tag = getElement("tags").value || " Sin categoría";
 
         addTask(title, description, tag);
     });
@@ -466,3 +466,30 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('[data-category="All"]')?.classList.add("active");
 });
 
+// =============================================
+// TOGGLE DARK MODE (opcional)
+// =============================================
+const darkModeToggle = document.getElementById('darkModeToggle');
+
+// 1. Definir la función de guardado
+function saveDarkModePreference(isDark) {
+    localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+}
+
+// 2. Definir la función de carga
+function loadDarkModePreference() {
+    const darkModeSetting = localStorage.getItem("darkMode");
+    if (darkModeSetting === "enabled") {
+        document.documentElement.classList.add("dark");
+    }
+}
+
+// 3. Ejecutar carga al iniciar
+loadDarkModePreference();
+
+// 4. Evento del botón
+darkModeToggle.addEventListener("click", () => {
+    // Alterna la clase en el HTML (raíz)
+    const isDark = document.documentElement.classList.toggle("dark"); 
+    saveDarkModePreference(isDark);
+});
