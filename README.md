@@ -23,3 +23,6 @@ Adding a new task is simple and intuitive. Enter the task name in the input fiel
 ![TaskFlow stats dashboard showing metrics for total tasks and completed tasks.](docs/design/stats.png)
 
 Track your productivity with the Statistics page. View your total number of tasks and how many you've completed. This gives you a quick overview of your progress and helps motivate you to complete more tasks.
+
+
+## All the functions 

@@ -44,6 +44,18 @@
                 </div>
             </form>
         </section>
+        <!-- Search bar -->
+        <section class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Buscar tareas...">
+                <button id="markAllCompleteBtn" class="mark-all-btn" title="Marcar todas como completadas">
+                    ✓ Marcar todas
+                </button>
+                <button id="deleteCompletedBtn" class="delete-completed-btn" title="Eliminar todas las completadas">
+                    🗑 Eliminar completadas
+                </button>
+            </div>
+        </section>
         <!-- Task template -->
         <template id="taskTemplate">
             <li class="task-item">
@@ -63,18 +75,39 @@
 
     </main>
             <aside>
-            <p>All tasks</p>
-            <p>Pending tasks</p>
-            <p>Completed tasks</p>
-            <p>Categories</p>
-            <ul>
-                <li>Work</li>
-                <li>Personal</li>
-                <li>Shopping</li>
+            <div class="filter-section">
+                <p id="all-tasks-btn" class="filter-btn active">
+                    All tasks
+                    <span class="counter" id="all-tasks-count">0</span>
+                </p>
+                <p id="pending-tasks-btn" class="filter-btn">
+                    Pending tasks
+                    <span class="counter" id="pending-tasks-count">0</span>
+                </p>
+                <p id="completed-tasks-btn" class="filter-btn">
+                    Completed tasks
+                    <span class="counter" id="completed-tasks-count">0</span>
+                </p>
+            </div>
+            <p class="categories-title">Categories</p>
+            <ul id="categoriesList" class="categories-list">
+                <li class="category-item" data-category="All">
+                    All Categories
+                </li>
+                <li class="category-item" data-category="Work">
+                    Work
+                </li>
+                <li class="category-item" data-category="Personal">
+                    Personal
+                </li>
+                <li class="category-item" data-category="Shopping">
+                    Shopping
+                </li>
             </ul>
         </aside>
     <footer>
         <!-- <p>&copy; 2024 Your Company. All rights reserved.</p> -->
     </footer>
+    <script src="app.js"></script>
 </body>
 </html>
