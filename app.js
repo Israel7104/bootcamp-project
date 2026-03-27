@@ -5,11 +5,26 @@ let currentFilter = "all"; // "all", "pending", "completed"
 let searchTerm = ""; // Término de búsqueda
 let selectedCategory = "All"; // Categoría seleccionada
 
+/**
+ * @typedef {Object} Task
+ * @property {number} id - Identificador único autoincremental.
+ * @property {string} title - Título principal de la tarea.
+ * @property {string} description - Descripción opcional de la tarea.
+ * @property {string} tag - Categoría o etiqueta asignada.
+ * @property {Date} createdAt - Fecha de creación.
+ * @property {boolean} completed - Estado de finalización.
+ */
+
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
 
 // Obtener elemento del DOM por ID
+/**
+ * Obtiene un elemento del DOM por su identificador.
+ * @param {string} id - ID del elemento a buscar.
+ * @returns {HTMLElement|null} Elemento encontrado o null si no existe.
+ */
 function getElement(id) {
     return document.getElementById(id);
 }
@@ -18,6 +33,27 @@ function getElement(id) {
 function refreshUI() {
     updateCounters();
     renderTasks();
+}
+
+// Guardar estado y refrescar interfaz
+function persistAndRefresh() {
+    saveTasks();
+    refreshUI();
+}
+
+// Registrar listener solo si el elemento existe
+/**
+ * Registra un event listener si el elemento destino existe.
+ * @param {string} elementId - ID del elemento al que se le agregará el listener.
+ * @param {string} eventName - Nombre del evento (por ejemplo, "click" o "input").
+ * @param {(event: Event) => void} handler - Función manejadora del evento.
+ * @returns {void}
+ */
+function addListenerIfExists(elementId, eventName, handler) {
+    const element = getElement(elementId);
+    if (element) {
+        element.addEventListener(eventName, handler);
+    }
 }
 
 // ============================================
@@ -37,6 +73,11 @@ function saveTasks() {
 }
 
 // Cargar tareas del LocalStorage
+/**
+ * Carga tareas y metadatos desde localStorage.
+ * Si los datos no existen o son inválidos, inicializa el estado por defecto.
+ * @returns {void}
+ */
 function loadTasks() {
     try {
         const savedTasks = localStorage.getItem("tasks");
@@ -99,6 +140,13 @@ function clearAllData() {
 // ============================================
 
 // Función constructora para crear nuevas tareas
+/**
+ * Crea un objeto tarea con estructura homogénea.
+ * @param {string} title - Título de la tarea.
+ * @param {string} description - Descripción de la tarea.
+ * @param {string} tag - Categoría seleccionada.
+ * @returns {Task} Tarea lista para almacenarse en memoria.
+ */
 function createTask(title, description, tag) {
     return {
         id: nextId++,
@@ -110,7 +158,60 @@ function createTask(title, description, tag) {
     };
 }
 
+// Validar y normalizar los datos del formulario
+/**
+ * Valida y normaliza los datos del formulario antes de crear una tarea.
+ * @param {string} title - Título ingresado por el usuario.
+ * @param {string} description - Descripción ingresada por el usuario.
+ * @param {string} tag - Categoría seleccionada.
+ * @returns {{title: string, description: string, tag: string} | null}
+ * Devuelve datos normalizados o null si la validación falla.
+ */
+function validateTaskForm(title, description, tag) {
+    const normalizedTitle = title.trim();
+    const normalizedDescription = description.trim();
+    const normalizedTag = tag.trim();
+
+    if (normalizedTitle === "") {
+        alert("El título es obligatorio.");
+        return null;
+    }
+
+    if (normalizedTitle.length < 3) {
+        alert("El título debe tener al menos 3 caracteres.");
+        return null;
+    }
+
+    if (normalizedTitle.length > 80) {
+        alert("El título no puede superar los 80 caracteres.");
+        return null;
+    }
+
+    if (normalizedDescription.length > 300) {
+        alert("La descripción no puede superar los 300 caracteres.");
+        return null;
+    }
+
+    if (normalizedTag === "") {
+        alert("Debes seleccionar una categoría.");
+        return null;
+    }
+
+    return {
+        title: normalizedTitle,
+        description: normalizedDescription,
+        tag: normalizedTag
+    };
+}
+
 // Función para agregar una tarea al array y actualizar el DOM
+/**
+ * Crea y agrega una tarea al estado global, persiste cambios y refresca la UI.
+ * @param {string} title - Título de la tarea.
+ * @param {string} description - Descripción de la tarea.
+ * @param {string} tag - Categoría de la tarea.
+ * @returns {void}
+ */
 function addTask(title, description, tag) {
     if (title.trim() === "") {
         alert("Por favor ingresa un título para la tarea");
@@ -140,16 +241,14 @@ function deleteTask(task) {
     const taskIndex = tasks.indexOf(task);
     if (taskIndex !== -1) {
         tasks.splice(taskIndex, 1);
-        saveTasks();
-        refreshUI();
+        persistAndRefresh();
     }
 }
 
 // Función para cambiar el estado de completado de una tarea
 function toggleTaskCompletion(task) {
     task.completed = !task.completed;
-    saveTasks();
-    refreshUI();
+    persistAndRefresh();
 }
 
 // Función para editar el título de una tarea
@@ -169,8 +268,7 @@ function editTaskTitle(task) {
     
     // Actualizar la tarea
     task.title = newTitle.trim();
-    saveTasks();
-    refreshUI();
+    persistAndRefresh();
 }
 
 // Función para marcar todas las tareas como completadas
@@ -181,23 +279,18 @@ function markAllTasksComplete() {
     }
     
     const allCompleted = tasks.every(task => task.completed);
-    
-    if (allCompleted) {
-        if (confirm("Todas las tareas ya están marcadas como completadas. ¿Deseas desmarcas todas?")) {
-            tasks.forEach(task => task.completed = false);
-        } else {
-            return;
-        }
-    } else {
-        if (confirm("¿Deseas marcar todas las tareas como completadas?")) {
-            tasks.forEach(task => task.completed = true);
-        } else {
-            return;
-        }
+    const confirmMessage = allCompleted
+        ? "Todas las tareas ya están marcadas como completadas. ¿Deseas desmarcas todas?"
+        : "¿Deseas marcar todas las tareas como completadas?";
+
+    if (!confirm(confirmMessage)) {
+        return;
     }
-    
-    saveTasks();
-    refreshUI();
+
+    tasks.forEach(task => {
+        task.completed = !allCompleted;
+    });
+    persistAndRefresh();
 }
 
 // Función para eliminar todas las tareas completadas
@@ -211,8 +304,7 @@ function deleteAllCompletedTasks() {
     
     if (confirm(`¿Deseas eliminar ${completedCount} tarea${completedCount !== 1 ? 's' : ''} completada${completedCount !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) {
         tasks = tasks.filter(task => !task.completed);
-        saveTasks();
-        refreshUI();
+        persistAndRefresh();
     }
 }
 
@@ -221,6 +313,10 @@ function deleteAllCompletedTasks() {
 // ============================================
 
 // Función para filtrar tareas según el filtro actual
+/**
+ * Obtiene la lista de tareas según filtros de estado, categoría y búsqueda.
+ * @returns {Task[]} Lista de tareas filtradas.
+ */
 function getFilteredTasks() {
     let filtered = tasks;
     
@@ -258,6 +354,11 @@ function updateActiveFilter(filterId) {
 }
 
 // Función para cambiar el filtro
+/**
+ * Cambia el filtro principal de estado y vuelve a renderizar.
+ * @param {"all"|"pending"|"completed"} filter - Filtro de estado a aplicar.
+ * @returns {void}
+ */
 function setFilter(filter) {
     currentFilter = filter;
     
@@ -272,12 +373,22 @@ function setFilter(filter) {
 }
 
 // Función para actualizar el término de búsqueda
+/**
+ * Actualiza el término de búsqueda en memoria y refresca el listado.
+ * @param {string} term - Texto de búsqueda ingresado por el usuario.
+ * @returns {void}
+ */
 function updateSearch(term) {
     searchTerm = term;
     renderTasks();
 }
 
 // Función para cambiar la categoría activa
+/**
+ * Aplica filtro por categoría y actualiza la opción visual activa.
+ * @param {string} category - Categoría seleccionada.
+ * @returns {void}
+ */
 function filterByCategory(category) {
     selectedCategory = category;
     
@@ -318,22 +429,13 @@ function fillTaskData(taskElement, task) {
     checkbox.checked = task.completed;
 }
 
-// Crear botón de eliminar
-function createDeleteButton(task) {
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Eliminar";
-    deleteBtn.className = "delete-btn";
-    deleteBtn.addEventListener("click", () => deleteTask(task));
-    return deleteBtn;
-}
-
-// Crear botón de editar
-function createEditButton(task) {
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Editar";
-    editBtn.className = "edit-btn";
-    editBtn.addEventListener("click", () => editTaskTitle(task));
-    return editBtn;
+// Crear botón de acción de tarea
+function createTaskActionButton(label, className, onClick) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.className = className;
+    button.addEventListener("click", onClick);
+    return button;
 }
 
 // Agregar eventos a la tarea
@@ -343,6 +445,11 @@ function addTaskEvents(listItem, task) {
 }
 
 // Renderizar una tarea individual
+/**
+ * Renderiza una tarea individual usando el template del DOM.
+ * @param {Task} task - Tarea a renderizar.
+ * @returns {DocumentFragment} Fragmento listo para insertarse en la lista.
+ */
 function renderTaskItem(task) {
     const taskTemplate = getElement("taskTemplate");
     const taskElement = taskTemplate.content.cloneNode(true);
@@ -362,8 +469,8 @@ function renderTaskItem(task) {
     const buttonsContainer = document.createElement("div");
     buttonsContainer.className = "task-buttons";
     
-    const editBtn = createEditButton(task);
-    const deleteBtn = createDeleteButton(task);
+    const editBtn = createTaskActionButton("Editar", "edit-btn", () => editTaskTitle(task));
+    const deleteBtn = createTaskActionButton("Eliminar", "delete-btn", () => deleteTask(task));
     
     buttonsContainer.appendChild(editBtn);
     buttonsContainer.appendChild(deleteBtn);
@@ -426,32 +533,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const title = getElement("task").value;
         const description = getElement("description").value;
-        const tag = getElement("tags").value || " Sin categoría";
+        const tag = getElement("tags").value;
 
         addTask(title, description, tag);
     });
 
     setupFilterButtons();
     
-    // Agregar event listener para la búsqueda
-    const searchInput = getElement("searchInput");
-    if (searchInput) {
-        searchInput.addEventListener("input", (e) => {
-            updateSearch(e.target.value);
-        });
-    }
-    
-    // Agregar event listener para marcar todas las tareas
-    const markAllBtn = getElement("markAllCompleteBtn");
-    if (markAllBtn) {
-        markAllBtn.addEventListener("click", markAllTasksComplete);
-    }
-    
-    // Agregar event listener para eliminar todas las completadas
-    const deleteCompletedBtn = getElement("deleteCompletedBtn");
-    if (deleteCompletedBtn) {
-        deleteCompletedBtn.addEventListener("click", deleteAllCompletedTasks);
-    }
+    addListenerIfExists("searchInput", "input", (e) => updateSearch(e.target.value));
+    addListenerIfExists("markAllCompleteBtn", "click", markAllTasksComplete);
+    addListenerIfExists("deleteCompletedBtn", "click", deleteAllCompletedTasks);
     
     // Agregar event listeners a las categorías
     const categoryItems = document.querySelectorAll(".category-item");
@@ -472,11 +563,20 @@ document.addEventListener("DOMContentLoaded", () => {
 const darkModeToggle = document.getElementById('darkModeToggle');
 
 // 1. Definir la función de guardado
+/**
+ * Persiste la preferencia de modo oscuro en localStorage.
+ * @param {boolean} isDark - Indica si el modo oscuro está activo.
+ * @returns {void}
+ */
 function saveDarkModePreference(isDark) {
     localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
 }
 
 // 2. Definir la función de carga
+/**
+ * Aplica la preferencia de modo oscuro almacenada al cargar la página.
+ * @returns {void}
+ */
 function loadDarkModePreference() {
     const darkModeSetting = localStorage.getItem("darkMode");
     if (darkModeSetting === "enabled") {
