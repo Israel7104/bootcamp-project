@@ -36,7 +36,7 @@ function saveTasks() {
     }
 }
 
-// Cargar tareas de localStorage
+// Cargar tareas del LocalStorage
 function loadTasks() {
     try {
         const savedTasks = localStorage.getItem("tasks");
@@ -163,7 +163,7 @@ function editTaskTitle(task) {
     
     // Validar que no esté vacío
     if (newTitle.trim() === "") {
-        alert("The title cannot be empty. Please enter a valid title.");
+        alert("Este titulo no puede estar vacio, por favor ingrese un titulo valido.");
         return;
     }
     
@@ -224,7 +224,7 @@ function deleteAllCompletedTasks() {
 function getFilteredTasks() {
     let filtered = tasks;
     
-    // Filtrar por estado (all, pending, completed)
+    // Filtrar por estado (todas, pendientes, completadas)
     if (currentFilter === "pending") {
         filtered = filtered.filter(task => !task.completed);
     } else if (currentFilter === "completed") {
@@ -467,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =============================================
-// TOGGLE DARK MODE (opcional)
+// ALTERNAR MODO OSCURO (opcional)
 // =============================================
 const darkModeToggle = document.getElementById('darkModeToggle');
 

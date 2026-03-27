@@ -6,16 +6,9 @@ En este documento voy a registrar los experimentos realizados durante el proyect
 ## 🧪 Experimentos realizados
 
 ### Experimento 1
-- Objetivo:
-- Procedimiento:
-- Resultado:
-- Conclusión:
 
 ### Experimento 2
-- Objetivo:
-- Procedimiento:
-- Resultado:
-- Conclusión:
+
 
 ## 📊 Análisis general
 Comparación de resultados y aprendizajes clave.
