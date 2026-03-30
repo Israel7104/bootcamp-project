@@ -5,6 +5,7 @@ let currentFilter = "all"; // "all", "pending", "completed"
 let searchTerm = ""; // Término de búsqueda
 let selectedCategory = "All"; // Categoría seleccionada
 let sortMode = "created"; // "created" o "alphabetical"
+let sortDirection = "asc"; // "asc" o "desc"
 /** @type {Task | null} Tarea abierta en el diálogo de edición */
 let taskBeingEdited = null;
 /** @type {string[]} Lista de categorías disponibles */
@@ -566,26 +567,44 @@ function sortTasksByMode(taskList) {
 
     if (sortMode === "alphabetical") {
         sorted.sort((a, b) => a.title.localeCompare(b.title, "es", { sensitivity: "base" }));
-        return sorted;
+    } else {
+        sorted.sort((a, b) => getTaskCreationTimestamp(a) - getTaskCreationTimestamp(b));
     }
 
-    sorted.sort((a, b) => getTaskCreationTimestamp(a) - getTaskCreationTimestamp(b));
+    if (sortDirection === "desc") {
+        sorted.reverse();
+    }
+
     return sorted;
 }
 
-// Actualizar texto del botón de orden
-function updateSortButtonLabel() {
+// Actualizar texto de los botones de orden
+function updateSortButtonLabels() {
     const toggleSortBtn = getElement("toggleSortBtn");
-    if (!toggleSortBtn) {
-        return;
+    const toggleSortDirectionBtn = getElement("toggleSortDirectionBtn");
+
+    if (toggleSortBtn) {
+        toggleSortBtn.textContent = sortMode === "alphabetical" ? "Orden: A-Z" : "Orden: creación";
     }
-    toggleSortBtn.textContent = sortMode === "alphabetical" ? "Orden: A-Z" : "Orden: creación";
+
+    if (toggleSortDirectionBtn) {
+        toggleSortDirectionBtn.textContent = sortDirection === "desc"
+            ? "Dirección: Des"
+            : "Dirección: Asc";
+    }
 }
 
 // Alternar entre orden por creación y alfabético
 function toggleSortMode() {
     sortMode = sortMode === "created" ? "alphabetical" : "created";
-    updateSortButtonLabel();
+    updateSortButtonLabels();
+    renderTasks();
+}
+
+// Alternar entre dirección ascendente y descendente
+function toggleSortDirection() {
+    sortDirection = sortDirection === "asc" ? "desc" : "asc";
+    updateSortButtonLabels();
     renderTasks();
 }
 
@@ -791,10 +810,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setupFilterButtons();
     setupCategoryQuickPicker("tags", "tagsQuickPicker");
     setupCategoryQuickPicker("edit-task-tags", "editTagsQuickPicker");
-    updateSortButtonLabel();
+    updateSortButtonLabels();
     
     addListenerIfExists("searchInput", "input", (e) => updateSearch(e.target.value));
     addListenerIfExists("toggleSortBtn", "click", toggleSortMode);
+    addListenerIfExists("toggleSortDirectionBtn", "click", toggleSortDirection);
     addListenerIfExists("markAllCompleteBtn", "click", markAllTasksComplete);
     addListenerIfExists("deleteCompletedBtn", "click", deleteAllCompletedTasks);
     
