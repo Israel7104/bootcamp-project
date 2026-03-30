@@ -4,6 +4,8 @@ let nextId = 1;
 let currentFilter = "all"; // "all", "pending", "completed"
 let searchTerm = ""; // Término de búsqueda
 let selectedCategory = "All"; // Categoría seleccionada
+/** @type {Task | null} Tarea abierta en el diálogo de edición */
+let taskBeingEdited = null;
 
 /**
  * @typedef {Object} Task
@@ -251,24 +253,47 @@ function toggleTaskCompletion(task) {
     persistAndRefresh();
 }
 
-// Función para editar el título de una tarea
-function editTaskTitle(task) {
-    const newTitle = prompt("Edit title:", task.title);
-    
-    // El usuario pulsa Cancelar o deja el campo vacío
-    if (newTitle === null) {
+/**
+ * Abre el diálogo de edición con título, descripción y categoría.
+ * @param {Task} task - Tarea a editar.
+ * @returns {void}
+ */
+function openEditTaskDialog(task) {
+    taskBeingEdited = task;
+    getElement("edit-task-title").value = task.title;
+    getElement("edit-task-description").value = task.description || "";
+    const tagSelect = getElement("edit-task-tags");
+    const allowed = ["Work", "Personal", "Shopping"];
+    tagSelect.value = allowed.includes(task.tag) ? task.tag : "Work";
+    getElement("editTaskDialog").showModal();
+}
+
+/**
+ * Aplica los cambios del formulario de edición si pasan la validación.
+ * @returns {void}
+ */
+function submitEditTaskForm() {
+    if (!taskBeingEdited) {
         return;
     }
-    
-    // Validar que no esté vacío
-    if (newTitle.trim() === "") {
-        alert("Este titulo no puede estar vacio, por favor ingrese un titulo valido.");
+    const title = getElement("edit-task-title").value;
+    const description = getElement("edit-task-description").value;
+    const tag = getElement("edit-task-tags").value;
+    const data = validateTaskForm(title, description, tag);
+    if (!data) {
         return;
     }
-    
-    // Actualizar la tarea
-    task.title = newTitle.trim();
+    taskBeingEdited.title = data.title;
+    taskBeingEdited.description = data.description;
+    taskBeingEdited.tag = data.tag;
+    taskBeingEdited = null;
+    getElement("editTaskDialog").close();
     persistAndRefresh();
+}
+
+function closeEditTaskDialog() {
+    taskBeingEdited = null;
+    getElement("editTaskDialog").close();
 }
 
 // Función para marcar todas las tareas como completadas
@@ -469,7 +494,7 @@ function renderTaskItem(task) {
     const buttonsContainer = document.createElement("div");
     buttonsContainer.className = "task-buttons";
     
-    const editBtn = createTaskActionButton("Editar", "edit-btn", () => editTaskTitle(task));
+    const editBtn = createTaskActionButton("Editar", "edit-btn", () => openEditTaskDialog(task));
     const deleteBtn = createTaskActionButton("Eliminar", "delete-btn", () => deleteTask(task));
     
     buttonsContainer.appendChild(editBtn);
@@ -555,6 +580,16 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Marcar "All" como activo por defecto
     document.querySelector('[data-category="All"]')?.classList.add("active");
+
+    const editDialog = getElement("editTaskDialog");
+    getElement("editTaskForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitEditTaskForm();
+    });
+    getElement("editTaskCancel").addEventListener("click", () => closeEditTaskDialog());
+    editDialog.addEventListener("close", () => {
+        taskBeingEdited = null;
+    });
 });
 
 // =============================================
