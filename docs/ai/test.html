@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //Mis intentos
+        function contarVocales(texto) {
+            const vocales = "aeiouAEIOU";
+            let contador = 0;
+            for (let i = 0; i < texto.length; i++) {
+                if (vocales.includes(texto[i])) {
+                    contador++;
+                }
+            }
+            return contador;
+        }
+        console.log(contarVocales("Hola mundo"));
+
+
+        function masRepetido(array) {
+            const repeticiones = {};
+            for (let i = 0; i < array.length; i++) {
+                const n = array[i];
+                repeticiones[n] = (repeticiones[n] || 0) + 1;
+            }
+            let maxVeces = 0;
+            let ganador = null;
+            for (const clave in repeticiones) {
+                if (repeticiones[clave] > maxVeces) {
+                    maxVeces = repeticiones[clave];
+                    ganador = Number(clave);
+                }
+            }
+            return ganador;
+        }
+        console.log(masRepetido([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 5]));
+
+
+        function palabraMasGrande(array) {
+            let palabraMasLarga = "";
+            for (let i = 0; i < array.length; i++) {
+                if (array[i].length > palabraMasLarga.length) {
+                    palabraMasLarga = array[i];
+                }
+            }
+            return palabraMasLarga;
+        }
+        console.log(palabraMasGrande(["hola", "adios", "bienvenido"]));
+    </script>
+    <script>
+        //Respuesta de la IA
+        function contarVocales(texto) {
+    const vocales = "aeiouAEIOU";
+    let contador = 0;
+
+    for (let letra of texto) {
+        if (vocales.includes(letra)) {
+            contador++;
+        }
+    }
+
+    return contador;
+}
+
+function masRepetido(array) {
+    const conteo = {};
+    let maxNum = null;
+    let maxCount = 0;
+
+    for (let num of array) {
+        conteo[num] = (conteo[num] || 0) + 1;
+
+        if (conteo[num] > maxCount) {
+            maxCount = conteo[num];
+            maxNum = num;
+        }
+    }
+
+    return maxNum;
+}
+
+function palabraMasLarga(frase) {
+    // Eliminar puntuación
+    let limpia = frase.replace(/[.,!?]/g, "");
+    let palabras = limpia.split(" ");
+
+    let masLarga = "";
+
+    for (let palabra of palabras) {
+        if (palabra.length > masLarga.length) {
+            masLarga = palabra;
+        }
+    }
+
+    return masLarga;
+}
+
+    </script>
+</body>
+</html>
