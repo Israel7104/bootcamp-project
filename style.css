@@ -429,6 +429,17 @@ aside li:hover {
     background-color: #c82333;
 }
 
+.sort-btn {
+    background-color: var(--color-secondary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    white-space: nowrap;
+}
+
+.sort-btn:hover {
+    background-color: #5a6268;
+}
+
 /* ============================================ */
 /* CATEGORY QUICK PICKER                        */
 /* ============================================ */
@@ -694,7 +705,8 @@ aside li:hover {
     }
 
     .mark-all-btn,
-    .delete-completed-btn {
+    .delete-completed-btn,
+    .sort-btn {
         width: 100%;
     }
 

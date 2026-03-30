@@ -4,6 +4,7 @@ let nextId = 1;
 let currentFilter = "all"; // "all", "pending", "completed"
 let searchTerm = ""; // Término de búsqueda
 let selectedCategory = "All"; // Categoría seleccionada
+let sortMode = "created"; // "created" o "alphabetical"
 /** @type {Task | null} Tarea abierta en el diálogo de edición */
 let taskBeingEdited = null;
 /** @type {string[]} Lista de categorías disponibles */
@@ -550,6 +551,44 @@ function updateSearch(term) {
     renderTasks();
 }
 
+// Obtener timestamp de creación de forma robusta
+function getTaskCreationTimestamp(task) {
+    const parsedDate = new Date(task.createdAt).getTime();
+    if (!Number.isNaN(parsedDate)) {
+        return parsedDate;
+    }
+    return task.id || 0;
+}
+
+// Ordenar tareas según modo activo
+function sortTasksByMode(taskList) {
+    const sorted = [...taskList];
+
+    if (sortMode === "alphabetical") {
+        sorted.sort((a, b) => a.title.localeCompare(b.title, "es", { sensitivity: "base" }));
+        return sorted;
+    }
+
+    sorted.sort((a, b) => getTaskCreationTimestamp(a) - getTaskCreationTimestamp(b));
+    return sorted;
+}
+
+// Actualizar texto del botón de orden
+function updateSortButtonLabel() {
+    const toggleSortBtn = getElement("toggleSortBtn");
+    if (!toggleSortBtn) {
+        return;
+    }
+    toggleSortBtn.textContent = sortMode === "alphabetical" ? "Orden: A-Z" : "Orden: creación";
+}
+
+// Alternar entre orden por creación y alfabético
+function toggleSortMode() {
+    sortMode = sortMode === "created" ? "alphabetical" : "created";
+    updateSortButtonLabel();
+    renderTasks();
+}
+
 // Función para cambiar la categoría activa
 /**
  * Aplica filtro por categoría y actualiza la opción visual activa.
@@ -695,13 +734,14 @@ function renderTasks() {
     tasksList.innerHTML = "";
 
     const filteredTasks = getFilteredTasks();
+    const sortedTasks = sortTasksByMode(filteredTasks);
 
-    if (filteredTasks.length === 0) {
+    if (sortedTasks.length === 0) {
         tasksList.innerHTML = `<li style='text-align: center; color: #999; padding: 20px;'>${getEmptyMessage()}</li>`;
         return;
     }
 
-    filteredTasks.forEach(task => {
+    sortedTasks.forEach(task => {
         const taskElement = renderTaskItem(task);
         tasksList.appendChild(taskElement);
     });
@@ -751,8 +791,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setupFilterButtons();
     setupCategoryQuickPicker("tags", "tagsQuickPicker");
     setupCategoryQuickPicker("edit-task-tags", "editTagsQuickPicker");
+    updateSortButtonLabel();
     
     addListenerIfExists("searchInput", "input", (e) => updateSearch(e.target.value));
+    addListenerIfExists("toggleSortBtn", "click", toggleSortMode);
     addListenerIfExists("markAllCompleteBtn", "click", markAllTasksComplete);
     addListenerIfExists("deleteCompletedBtn", "click", deleteAllCompletedTasks);
     
