@@ -1017,14 +1017,30 @@ function loadDarkModePreference() {
     if (darkModeSetting === "enabled") {
         document.documentElement.classList.add("dark");
     }
+    updateDarkModeButtonLabel(document.documentElement.classList.contains("dark"));
+}
+
+/**
+ * Actualiza el texto del botón según el tema actual.
+ * @param {boolean} isDark - Indica si el modo oscuro está activo.
+ * @returns {void}
+ */
+function updateDarkModeButtonLabel(isDark) {
+    if (!darkModeToggle) {
+        return;
+    }
+    darkModeToggle.textContent = isDark ? "Modo Claro" : "Modo Oscuro";
 }
 
 // 3. Ejecutar carga al iniciar
 loadDarkModePreference();
 
 // 4. Evento del botón
-darkModeToggle.addEventListener("click", () => {
-    // Alterna la clase en el HTML (raíz)
-    const isDark = document.documentElement.classList.toggle("dark"); 
-    saveDarkModePreference(isDark);
-});
+if (darkModeToggle) {
+    darkModeToggle.addEventListener("click", () => {
+        // Alterna la clase en el HTML (raíz)
+        const isDark = document.documentElement.classList.toggle("dark");
+        saveDarkModePreference(isDark);
+        updateDarkModeButtonLabel(isDark);
+    });
+}
