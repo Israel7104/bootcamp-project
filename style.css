@@ -127,9 +127,14 @@ footer {
     grid-column: 1 / -1;
     grid-row: 3;
     display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
 
-    
-
+.footer-author {
+    margin-left: auto;
+    font-size: var(--font-size-sm);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 /* ============================================ */
