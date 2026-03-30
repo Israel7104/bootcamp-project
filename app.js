@@ -495,23 +495,86 @@ function closeEditTaskDialog() {
     getElement("editTaskDialog").close();
 }
 
+/**
+ * Muestra un diálogo de confirmación con estilo de la aplicación.
+ * @param {string} message - Mensaje a mostrar en el diálogo.
+ * @returns {Promise<boolean>} true si el usuario acepta, false si cancela.
+ */
+function showStyledConfirm(message) {
+    const dialog = getElement("markAllConfirmDialog");
+    const messageElement = getElement("confirmDialogMessage");
+    const acceptButton = getElement("confirmDialogAccept");
+    const cancelButton = getElement("confirmDialogCancel");
+
+    if (!dialog || !messageElement || !acceptButton || !cancelButton || typeof dialog.showModal !== "function") {
+        return Promise.resolve(confirm(message));
+    }
+
+    messageElement.textContent = message;
+    dialog.showModal();
+
+    return new Promise((resolve) => {
+        let resolved = false;
+
+        const cleanup = () => {
+            acceptButton.removeEventListener("click", onAccept);
+            cancelButton.removeEventListener("click", onCancel);
+            dialog.removeEventListener("cancel", onCancelEvent);
+            dialog.removeEventListener("click", onBackdropClick);
+            dialog.removeEventListener("close", onClose);
+        };
+
+        const finish = (value) => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            if (dialog.open) {
+                dialog.close();
+            }
+            resolve(value);
+        };
+
+        const onAccept = () => finish(true);
+        const onCancel = () => finish(false);
+        const onCancelEvent = (event) => {
+            event.preventDefault();
+            finish(false);
+        };
+        const onBackdropClick = (event) => {
+            if (event.target === dialog) {
+                finish(false);
+            }
+        };
+        const onClose = () => finish(false);
+
+        acceptButton.addEventListener("click", onAccept);
+        cancelButton.addEventListener("click", onCancel);
+        dialog.addEventListener("cancel", onCancelEvent);
+        dialog.addEventListener("click", onBackdropClick);
+        dialog.addEventListener("close", onClose);
+    });
+}
+
 // Función para marcar todas las tareas como completadas
-function markAllTasksComplete() {
-    if (tasks.length === 0) {
-        alert("No hay tareas para marcar como completadas");
+async function markAllTasksComplete() {
+    const visibleTasks = getFilteredTasks();
+
+    if (visibleTasks.length === 0) {
+        alert("No hay tareas visibles para marcar como completadas");
         return;
     }
-    
-    const allCompleted = tasks.every(task => task.completed);
+
+    const allCompleted = visibleTasks.every(task => task.completed);
     const confirmMessage = allCompleted
-        ? "Todas las tareas ya están marcadas como completadas. ¿Deseas desmarcas todas?"
-        : "¿Deseas marcar todas las tareas como completadas?";
+        ? "Todas las tareas visibles ya están completadas. ¿Deseas desmarcarlas?"
+        : "¿Deseas marcar como completadas todas las tareas visibles?";
 
-    if (!confirm(confirmMessage)) {
+    const confirmed = await showStyledConfirm(confirmMessage);
+    if (!confirmed) {
         return;
     }
 
-    tasks.forEach(task => {
+    visibleTasks.forEach(task => {
         task.completed = !allCompleted;
     });
     persistAndRefresh();
@@ -525,11 +588,14 @@ function deleteAllCompletedTasks() {
         alert("No hay tareas completadas para eliminar");
         return;
     }
-    
-    if (confirm(`¿Deseas eliminar ${completedCount} tarea${completedCount !== 1 ? 's' : ''} completada${completedCount !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) {
+
+    showStyledConfirm(`¿Deseas eliminar ${completedCount} tarea${completedCount !== 1 ? 's' : ''} completada${completedCount !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`).then((confirmed) => {
+        if (!confirmed) {
+            return;
+        }
         tasks = tasks.filter(task => !task.completed);
         persistAndRefresh();
-    }
+    });
 }
 
 // ============================================

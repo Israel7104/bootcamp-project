@@ -208,6 +208,16 @@
         <a href="#" class="hover:bg-blue-500 p-2 rounded">Contacto</a>
         <span class="ml-auto text-sm opacity-60">&copy; Israel 2026</span>
     </footer>
+
+    <dialog id="markAllConfirmDialog" class="confirm-dialog" aria-labelledby="confirmDialogTitle">
+        <h2 id="confirmDialogTitle" class="confirm-dialog__title">Confirmar acción</h2>
+        <p id="confirmDialogMessage" class="confirm-dialog__message"></p>
+        <div class="confirm-dialog__actions">
+            <button id="confirmDialogCancel" type="button" class="confirm-dialog__btn confirm-dialog__btn--secondary">Cancelar</button>
+            <button id="confirmDialogAccept" type="button" class="confirm-dialog__btn confirm-dialog__btn--primary">Aceptar</button>
+        </div>
+    </dialog>
+
         <!-- About dialog -->
         <dialog id="aboutDialog" class="about-dialog">
             <button id="aboutClose" class="about-dialog__close" aria-label="Cerrar">&times;</button>
