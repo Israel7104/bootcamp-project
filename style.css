@@ -430,6 +430,52 @@ aside li:hover {
 }
 
 /* ============================================ */
+/* CATEGORY QUICK PICKER                        */
+/* ============================================ */
+.category-quick-picker {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.category-chip {
+    width: auto;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: var(--font-size-sm);
+    background-color: rgba(0, 123, 255, 0.12);
+    color: var(--color-primary-dark);
+    border: 1px solid rgba(0, 86, 179, 0.2);
+    box-shadow: none;
+    transform: none;
+}
+
+.category-chip:hover {
+    background-color: rgba(0, 123, 255, 0.22);
+    color: var(--color-primary-dark);
+    box-shadow: none;
+    transform: none;
+}
+
+.category-chip:active {
+    box-shadow: none;
+    transform: none;
+}
+
+.quick-picker-empty {
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+}
+
+/* ============================================ */
 /* TASK LIST                                    */
 /* ============================================ */
 .tasks-list {
@@ -665,6 +711,10 @@ aside li:hover {
         width: 20px;
         height: 20px;
         min-width: 20px;
+    }
+
+    .category-chip {
+        width: auto;
     }
 }
 

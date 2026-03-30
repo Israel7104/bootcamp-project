@@ -62,13 +62,13 @@
                 <div class="form-group">
                     <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Añadir
                         categoría:</label>
-                    <select id="tags" name="tags" required
-                        class="mt-1 block w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md p-2">
-                        <option value="" disabled selected>Seleccionar categoría...</option>
-                        <option value="Work">Trabajo</option>
-                        <option value="Personal">Personal</option>
-                        <option value="Shopping">Compras</option>
-                    </select>
+                    <input type="text" id="tags" name="tags" required
+                        list="categories-datalist"
+                        placeholder="Seleccionar o escribir categoría..."
+                        autocomplete="off"
+                        class="mt-1 block w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 rounded-md p-2">
+                    <div id="tagsQuickPicker" class="category-quick-picker hidden" aria-label="Categorías rápidas"></div>
+                    <datalist id="categories-datalist"></datalist>
                 </div>
             </form>
         </section>
@@ -150,17 +150,8 @@
         </ul> -->
         <p class="categories-title ">Categorías</p>
         <ul id="categoriesList" class="categories-list mb-4">
-            <li class="category-item " data-category="All" tabindex="0">
+            <li class="category-item" data-category="All" tabindex="0">
                 Todas las categorías
-            </li>
-            <li class="category-item " data-category="Work" tabindex="0">
-                Trabajo
-            </li>
-            <li class="category-item " data-category="Personal" tabindex="0">
-                Personal
-            </li>
-            <li class="category-item " data-category="Shopping" tabindex="0">
-                Compras
             </li>
         </ul>
     </aside>
@@ -182,12 +173,12 @@
             </div>
             <div class="form-group">
                 <label for="edit-task-tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoría</label>
-                <select id="edit-task-tags" name="edit-task-tags" required
+                <input type="text" id="edit-task-tags" name="edit-task-tags" required
+                    list="categories-datalist"
+                    placeholder="Seleccionar o escribir categoría..."
+                    autocomplete="off"
                     class="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500">
-                    <option value="Work">Trabajo</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Shopping">Compras</option>
-                </select>
+                <div id="editTagsQuickPicker" class="category-quick-picker hidden" aria-label="Categorías rápidas"></div>
             </div>
             <div class="flex flex-wrap justify-end gap-2 pt-2">
                 <button type="button" id="editTaskCancel"

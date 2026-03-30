@@ -6,6 +6,8 @@ let searchTerm = ""; // Término de búsqueda
 let selectedCategory = "All"; // Categoría seleccionada
 /** @type {Task | null} Tarea abierta en el diálogo de edición */
 let taskBeingEdited = null;
+/** @type {string[]} Lista de categorías disponibles */
+let categories = ["Trabajo", "Personal", "Compras"];
 
 /**
  * @typedef {Object} Task
@@ -34,6 +36,8 @@ function getElement(id) {
 // Limpiar y refrescar la interfaz
 function refreshUI() {
     updateCounters();
+    renderSidebarCategories();
+    updateCategoriesDatalist();
     renderTasks();
 }
 
@@ -74,6 +78,31 @@ function saveTasks() {
     }
 }
 
+// Guardar categorías en localStorage
+function saveCategories() {
+    try {
+        localStorage.setItem("categories", JSON.stringify(categories));
+    } catch (error) {
+        console.error("Error al guardar categorías en localStorage:", error);
+    }
+}
+
+// Cargar categorías del localStorage
+function loadCategories() {
+    try {
+        const saved = localStorage.getItem("categories");
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                categories = parsed;
+            }
+        }
+    } catch (error) {
+        console.error("Error al cargar categorías de localStorage:", error);
+        categories = ["Trabajo", "Personal", "Compras"];
+    }
+}
+
 // Cargar tareas del LocalStorage
 /**
  * Carga tareas y metadatos desde localStorage.
@@ -81,6 +110,7 @@ function saveTasks() {
  * @returns {void}
  */
 function loadTasks() {
+    loadCategories();
     try {
         const savedTasks = localStorage.getItem("tasks");
         const savedNextId = localStorage.getItem("nextId");
@@ -93,6 +123,20 @@ function loadTasks() {
             if (Array.isArray(parsedTasks) && parsedTasks.length > 0) {
                 tasks = parsedTasks;
                 
+                // Migrar categorías antiguas en inglés al español
+                const tagMigration = { "Work": "Trabajo", "Shopping": "Compras" };
+                tasks = tasks.map(task => ({
+                    ...task,
+                    tag: tagMigration[task.tag] || task.tag
+                }));
+
+                // Agregar a la lista cualquier categoría personalizada de tareas existentes
+                tasks.forEach(task => {
+                    if (task.tag && !categories.includes(task.tag)) {
+                        categories.push(task.tag);
+                    }
+                });
+
                 // Cargar nextId correctamente
                 if (savedNextId) {
                     nextId = parseInt(savedNextId);
@@ -124,6 +168,7 @@ function loadTasks() {
 function initializeDefaultState() {
     tasks = [];
     nextId = 1;
+    categories = ["Trabajo", "Personal", "Compras"];
 }
 
 // Limpiar localStorage y reiniciar
@@ -131,6 +176,7 @@ function clearAllData() {
     if (confirm("¿Estás seguro de que quieres eliminar todas las tareas?")) {
         localStorage.removeItem("tasks");
         localStorage.removeItem("nextId");
+        localStorage.removeItem("categories");
         initializeDefaultState();
         refreshUI();
         console.log("Todos los datos han sido eliminados");
@@ -206,6 +252,102 @@ function validateTaskForm(title, description, tag) {
     };
 }
 
+// Agregar categoría a la lista si no existe aún
+function addCategoryIfNew(tag) {
+    const normalized = tag ? tag.trim() : "";
+    const exists = categories.some(category => category.toLowerCase() === normalized.toLowerCase());
+    if (normalized && !exists) {
+        categories.push(normalized);
+        saveCategories();
+    }
+}
+
+/**
+ * Crea un botón de categoría para selección rápida.
+ * @param {string} category - Nombre de la categoría.
+ * @param {HTMLInputElement} input - Input objetivo.
+ * @param {HTMLElement} quickPicker - Contenedor de botones.
+ * @returns {HTMLButtonElement}
+ */
+function createCategoryChip(category, input, quickPicker) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "category-chip";
+    chip.textContent = category;
+    chip.addEventListener("click", () => {
+        input.value = category;
+        quickPicker.classList.add("hidden");
+    });
+    return chip;
+}
+
+/**
+ * Renderiza categorías sugeridas en la ventanita rápida.
+ * @param {HTMLInputElement} input - Campo de categoría.
+ * @param {HTMLElement} quickPicker - Contenedor visual de sugerencias.
+ * @returns {void}
+ */
+function renderCategoryQuickPicker(input, quickPicker) {
+    const term = input.value.trim().toLowerCase();
+    const matchingCategories = categories.filter(category => category.toLowerCase().includes(term)).slice(0, 8);
+    quickPicker.innerHTML = "";
+
+    if (matchingCategories.length === 0) {
+        const emptyMessage = document.createElement("p");
+        emptyMessage.className = "quick-picker-empty";
+        emptyMessage.textContent = "Escribe y presiona Enter para crear esta categoría.";
+        quickPicker.appendChild(emptyMessage);
+        return;
+    }
+
+    matchingCategories.forEach(category => {
+        quickPicker.appendChild(createCategoryChip(category, input, quickPicker));
+    });
+}
+
+/**
+ * Configura la ventanita de selección rápida para un input de categoría.
+ * @param {string} inputId - ID del input objetivo.
+ * @param {string} quickPickerId - ID del contenedor de sugerencias.
+ * @returns {void}
+ */
+function setupCategoryQuickPicker(inputId, quickPickerId) {
+    const input = getElement(inputId);
+    const quickPicker = getElement(quickPickerId);
+    if (!input || !quickPicker) {
+        return;
+    }
+
+    const showQuickPicker = () => {
+        renderCategoryQuickPicker(input, quickPicker);
+        quickPicker.classList.remove("hidden");
+    };
+
+    input.addEventListener("focus", showQuickPicker);
+    input.addEventListener("input", showQuickPicker);
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            quickPicker.classList.add("hidden");
+            return;
+        }
+
+        if (event.key === "Enter") {
+            const typedCategory = input.value.trim();
+            if (typedCategory) {
+                addCategoryIfNew(typedCategory);
+                updateCategoriesDatalist();
+                renderSidebarCategories();
+            }
+        }
+    });
+
+    input.addEventListener("blur", () => {
+        setTimeout(() => {
+            quickPicker.classList.add("hidden");
+        }, 120);
+    });
+}
+
 // Función para agregar una tarea al array y actualizar el DOM
 /**
  * Crea y agrega una tarea al estado global, persiste cambios y refresca la UI.
@@ -222,6 +364,7 @@ function addTask(title, description, tag) {
 
     const newTask = createTask(title, description, tag);
     tasks.push(newTask);
+    addCategoryIfNew(tag);
     saveTasks();
     clearForm();
     refreshUI();
@@ -262,9 +405,7 @@ function openEditTaskDialog(task) {
     taskBeingEdited = task;
     getElement("edit-task-title").value = task.title;
     getElement("edit-task-description").value = task.description || "";
-    const tagSelect = getElement("edit-task-tags");
-    const allowed = ["Work", "Personal", "Shopping"];
-    tagSelect.value = allowed.includes(task.tag) ? task.tag : "Work";
+    getElement("edit-task-tags").value = task.tag || categories[0] || "";
     getElement("editTaskDialog").showModal();
 }
 
@@ -287,6 +428,7 @@ function submitEditTaskForm() {
     taskBeingEdited.description = data.description;
     taskBeingEdited.tag = data.tag;
     taskBeingEdited = null;
+    addCategoryIfNew(data.tag);
     getElement("editTaskDialog").close();
     persistAndRefresh();
 }
@@ -504,6 +646,49 @@ function renderTaskItem(task) {
     return taskElement;
 }
 
+// Actualizar las opciones del datalist de categorías
+function updateCategoriesDatalist() {
+    const datalist = document.getElementById("categories-datalist");
+    if (!datalist) return;
+    datalist.innerHTML = "";
+    categories.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        datalist.appendChild(option);
+    });
+}
+
+// Renderizar categorías en la barra lateral
+function renderSidebarCategories() {
+    const categoriesList = getElement("categoriesList");
+    const allItem = categoriesList.querySelector('[data-category="All"]');
+    categoriesList.innerHTML = "";
+    if (allItem) {
+        if (selectedCategory === "All") {
+            allItem.classList.add("active");
+        } else {
+            allItem.classList.remove("active");
+        }
+        categoriesList.appendChild(allItem);
+    }
+    categories.forEach(cat => {
+        const li = document.createElement("li");
+        li.className = "category-item";
+        if (selectedCategory === cat) li.classList.add("active");
+        li.setAttribute("data-category", cat);
+        li.setAttribute("tabindex", "0");
+        li.textContent = cat;
+        li.addEventListener("click", () => filterByCategory(cat));
+        li.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                filterByCategory(cat);
+            }
+        });
+        categoriesList.appendChild(li);
+    });
+}
+
 // Función para renderizar todas las tareas en el DOM
 function renderTasks() {
     const tasksList = getElement("tasksList");
@@ -564,22 +749,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     setupFilterButtons();
+    setupCategoryQuickPicker("tags", "tagsQuickPicker");
+    setupCategoryQuickPicker("edit-task-tags", "editTagsQuickPicker");
     
     addListenerIfExists("searchInput", "input", (e) => updateSearch(e.target.value));
     addListenerIfExists("markAllCompleteBtn", "click", markAllTasksComplete);
     addListenerIfExists("deleteCompletedBtn", "click", deleteAllCompletedTasks);
     
-    // Agregar event listeners a las categorías
-    const categoryItems = document.querySelectorAll(".category-item");
-    categoryItems.forEach(item => {
-        item.addEventListener("click", () => {
-            const category = item.getAttribute("data-category");
-            filterByCategory(category);
+    // Listener para "Todas las categorías"; el resto se gestiona en renderSidebarCategories()
+    const allCategoryItem = document.querySelector('[data-category="All"]');
+    if (allCategoryItem) {
+        allCategoryItem.addEventListener("click", () => filterByCategory("All"));
+        allCategoryItem.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                filterByCategory("All");
+            }
         });
-    });
-    
-    // Marcar "All" como activo por defecto
-    document.querySelector('[data-category="All"]')?.classList.add("active");
+    }
 
     const editDialog = getElement("editTaskDialog");
     getElement("editTaskForm").addEventListener("submit", (e) => {
