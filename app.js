@@ -993,6 +993,30 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =============================================
+// DIALOG "ACERCA DE"
+// =============================================
+const aboutLink = document.getElementById("aboutLink");
+const aboutDialog = document.getElementById("aboutDialog");
+const aboutClose = document.getElementById("aboutClose");
+
+if (aboutLink && aboutDialog) {
+    aboutLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        aboutDialog.showModal();
+    });
+}
+
+if (aboutClose && aboutDialog) {
+    aboutClose.addEventListener("click", () => aboutDialog.close());
+}
+
+if (aboutDialog) {
+    aboutDialog.addEventListener("click", (e) => {
+        if (e.target === aboutDialog) aboutDialog.close();
+    });
+}
+
+// =============================================
 // ALTERNAR MODO OSCURO (opcional)
 // =============================================
 const darkModeToggle = document.getElementById('darkModeToggle');

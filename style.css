@@ -138,6 +138,83 @@ footer {
 }
 
 /* ============================================ */
+/* DIALOG "ACERCA DE"                           */
+/* ============================================ */
+.about-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    width: min(480px, 90vw);
+    border: none;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    background-color: var(--color-white);
+    color: var(--color-text);
+    box-shadow: var(--shadow-lg);
+}
+
+.about-dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.about-dialog__close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-dialog__close:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+    color: var(--color-text);
+}
+
+.about-dialog__title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+}
+
+.about-dialog__body {
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.about-dialog__author {
+    margin-top: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    text-align: right;
+}
+
+html.dark .about-dialog {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+html.dark .about-dialog__close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #f3f4f6;
+}
+
+/* ============================================ */
 /* FORM                                         */
 /* ============================================ */
 form {

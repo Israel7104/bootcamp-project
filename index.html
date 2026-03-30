@@ -204,10 +204,24 @@
     </dialog>
 
     <footer class="bg-gray-800 text-white p-4 text-center">
-        <a href="#" class="hover:bg-blue-500 p-2 rounded">Acerca de</a>
+        <a href="#" id="aboutLink" class="hover:bg-blue-500 p-2 rounded">Acerca de</a>
         <a href="#" class="hover:bg-blue-500 p-2 rounded">Contacto</a>
         <span class="ml-auto text-sm opacity-60">&copy; Israel 2026</span>
     </footer>
+        <!-- About dialog -->
+        <dialog id="aboutDialog" class="about-dialog">
+            <button id="aboutClose" class="about-dialog__close" aria-label="Cerrar">&times;</button>
+            <h2 class="about-dialog__title">Acerca de TaskFlow</h2>
+            <p class="about-dialog__body">
+                Soy estudiante y creé esta aplicación porque no encontraba ninguna herramienta que me ayudase a
+                organizarme como yo quiero. TaskFlow está pensada exactamente para apuntar y ordenar mis tareas
+                a mi manera: con categorías propias, búsqueda rápida y una interfaz limpia.
+            </p>
+            <p class="about-dialog__body">
+                Si te resulta útil, ¡me alegra mucho!
+            </p>
+            <p class="about-dialog__author">&copy; Israel &mdash; 2026</p>
+        </dialog>
     <script src="app.js"></script>
 </body>
 
