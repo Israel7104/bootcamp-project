@@ -18,6 +18,7 @@ let categories = ["Trabajo", "Personal", "Compras"];
  * @property {string} description - Descripción opcional de la tarea.
  * @property {string} tag - Categoría o etiqueta asignada.
  * @property {Date} createdAt - Fecha de creación.
+ * @property {Date|null} updatedAt - Fecha de última edición.
  * @property {boolean} completed - Estado de finalización.
  */
 
@@ -116,6 +117,7 @@ function loadTasks() {
     try {
         const savedTasks = localStorage.getItem("tasks");
         const savedNextId = localStorage.getItem("nextId");
+        let tasksWereMigrated = false;
         
         // Si hay tareas guardadas, intentar cargarlas
         if (savedTasks) {
@@ -132,6 +134,19 @@ function loadTasks() {
                     tag: tagMigration[task.tag] || task.tag
                 }));
 
+                tasks = tasks.map(task => {
+                    const normalizedCreatedAt = task.createdAt || new Date().toISOString();
+                    const normalizedUpdatedAt = task.updatedAt || null;
+                    if (!task.createdAt || typeof task.updatedAt === "undefined") {
+                        tasksWereMigrated = true;
+                    }
+                    return {
+                        ...task,
+                        createdAt: normalizedCreatedAt,
+                        updatedAt: normalizedUpdatedAt
+                    };
+                });
+
                 // Agregar a la lista cualquier categoría personalizada de tareas existentes
                 tasks.forEach(task => {
                     if (task.tag && !categories.includes(task.tag)) {
@@ -147,6 +162,10 @@ function loadTasks() {
                     nextId = Math.max(nextId, maxId + 1);
                 } else {
                     nextId = tasks.length + 1;
+                }
+
+                if (tasksWereMigrated) {
+                    saveTasks();
                 }
                 
                 console.log("Tareas cargadas desde localStorage:", tasks.length);
@@ -204,8 +223,37 @@ function createTask(title, description, tag) {
         description: description,
         tag: tag,
         createdAt: new Date(),
+        updatedAt: null,
         completed: false
     };
+}
+
+// Formatear fecha para mostrarla en cada tarea
+function formatTaskDate(dateValue) {
+    if (!dateValue) {
+        return "";
+    }
+
+    const parsedDate = new Date(dateValue);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return "Fecha no disponible";
+    }
+
+    return parsedDate.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+}
+
+// Construir el texto de metadatos de una tarea
+function buildTaskMetaText(task) {
+    const createdText = `Creada: ${formatTaskDate(task.createdAt)}`;
+    if (!task.updatedAt) {
+        return createdText;
+    }
+
+    return `${createdText} | Editada: ${formatTaskDate(task.updatedAt)}`;
 }
 
 // Validar y normalizar los datos del formulario
@@ -426,9 +474,16 @@ function submitEditTaskForm() {
     if (!data) {
         return;
     }
+    const wasEdited = taskBeingEdited.title !== data.title
+        || taskBeingEdited.description !== data.description
+        || taskBeingEdited.tag !== data.tag;
+
     taskBeingEdited.title = data.title;
     taskBeingEdited.description = data.description;
     taskBeingEdited.tag = data.tag;
+    if (wasEdited) {
+        taskBeingEdited.updatedAt = new Date();
+    }
     taskBeingEdited = null;
     addCategoryIfNew(data.tag);
     getElement("editTaskDialog").close();
@@ -648,6 +703,7 @@ function getEmptyMessage() {
 function fillTaskData(taskElement, task) {
     taskElement.querySelector(".task-title").textContent = task.title;
     taskElement.querySelector(".task-description").textContent = task.description || "Sin descripción";
+    taskElement.querySelector(".task-meta").textContent = buildTaskMetaText(task);
     taskElement.querySelector(".task-status").textContent = task.tag;
     
     const checkbox = taskElement.querySelector(".task-checkbox");

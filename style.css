@@ -549,6 +549,12 @@ aside li:hover {
     color: var(--color-text-light);
 }
 
+.task-meta {
+    margin: var(--spacing-xs) 0 0;
+    font-size: 12px;
+    color: var(--color-text-light);
+}
+
 .task-status {
     padding: var(--spacing-xs) var(--spacing-md);
     border-radius: var(--border-radius-md);
