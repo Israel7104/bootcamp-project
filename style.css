@@ -388,6 +388,42 @@ aside li:hover {
     align-items: center;
 }
 
+.search-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrapper #searchInput {
+    flex: 1;
+    padding-right: 40px;
+}
+
+#clearSearchBtn {
+    position: absolute;
+    right: 8px;
+    min-height: unset;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: none;
+    color: var(--color-text-light);
+    font-size: 18px;
+    line-height: 1;
+    border-radius: 50%;
+    box-shadow: none;
+    transform: none;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+#clearSearchBtn:hover {
+    color: var(--color-danger);
+    background-color: rgba(220, 53, 69, 0.1);
+    box-shadow: none;
+    transform: none;
+}
+
 #searchInput {
     flex: 1;
     padding: var(--spacing-md) var(--spacing-lg);
@@ -405,6 +441,33 @@ aside li:hover {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+#searchInput.searching {
+    border-color: var(--color-primary);
+}
+
+.search-feedback {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    min-height: 20px;
+    color: var(--color-text-light);
+}
+
+.search-feedback--results {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.search-feedback--empty {
+    color: var(--color-danger);
+}
+
+.tasks-empty-message {
+    text-align: center;
+    color: var(--color-text-light);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    font-size: var(--font-size-base);
 }
 
 .mark-all-btn {
@@ -547,6 +610,19 @@ aside li:hover {
     margin: 0;
     font-size: var(--font-size-sm);
     color: var(--color-text-light);
+}
+
+.search-highlight {
+    background-color: #fde68a;
+    color: inherit;
+    border-radius: var(--border-radius-sm);
+    padding: 0 2px;
+    font-weight: 700;
+}
+
+.task-status .search-highlight {
+    background-color: rgba(255, 255, 255, 0.85);
+    color: #1f2937;
 }
 
 .task-meta {

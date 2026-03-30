@@ -75,8 +75,11 @@
         <!-- barra de búsqueda -->
         <section class="search-section p-4">
             <div class="search-container flex items-center gap-2">
-                <input type="text" id="searchInput" placeholder="Buscar tareas..."
-                    class="w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 sm:text-sm">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" placeholder="Buscar tareas..."
+                        class="w-full border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 sm:text-sm">
+                    <button type="button" id="clearSearchBtn" class="hidden" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">&times;</button>
+                </div>
                 <button id="toggleSortBtn" class="sort-btn" title="Cambiar orden de tareas">
                     Orden: creación
                 </button>
@@ -92,6 +95,7 @@
                     🗑 Eliminar completadas
                 </button>
             </div>
+            <div id="searchFeedback" class="search-feedback"></div>
         </section>
         <!-- plantilla de tarea -->
         <template id="taskTemplate" class="hidden">

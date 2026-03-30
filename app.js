@@ -607,6 +607,48 @@ function updateSearch(term) {
     renderTasks();
 }
 
+// Actualiza el contador de resultados de búsqueda y visibilidad del botón de limpiar
+function updateSearchFeedback(resultCount) {
+    const feedback = getElement("searchFeedback");
+    const clearBtn = getElement("clearSearchBtn");
+    const searchInput = getElement("searchInput");
+    const term = searchTerm.trim();
+
+    if (clearBtn) {
+        clearBtn.classList.toggle("hidden", !term);
+    }
+    if (searchInput) {
+        searchInput.classList.toggle("searching", !!term);
+    }
+    if (!feedback) {
+        return;
+    }
+
+    if (!term) {
+        feedback.textContent = "";
+        feedback.className = "search-feedback";
+        return;
+    }
+
+    if (resultCount === 0) {
+        feedback.textContent = `Sin resultados para “${term}”`;
+        feedback.className = "search-feedback search-feedback--empty";
+    } else {
+        feedback.textContent = `${resultCount} resultado${resultCount !== 1 ? "s" : ""} para “${term}”`;
+        feedback.className = "search-feedback search-feedback--results";
+    }
+}
+
+// Limpiar la búsqueda activa
+function clearSearch() {
+    const searchInput = getElement("searchInput");
+    if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+    }
+    updateSearch("");
+}
+
 // Obtener timestamp de creación de forma robusta
 function getTaskCreationTimestamp(task) {
     const parsedDate = new Date(task.createdAt).getTime();
@@ -691,6 +733,9 @@ function filterByCategory(category) {
 
 // Obtener mensaje de lista vacía según el filtro
 function getEmptyMessage() {
+    if (searchTerm.trim()) {
+        return `Sin resultados para “${searchTerm.trim()}”`;
+    }
     const messages = {
         all: "No hay tareas aún. ¡Agrega una!",
         pending: "No hay tareas pendientes.",
@@ -699,12 +744,56 @@ function getEmptyMessage() {
     return messages[currentFilter] || messages.all;
 }
 
+// Escapar caracteres especiales para construir expresiones regulares seguras
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Renderizar texto con coincidencias resaltadas del término de búsqueda
+function renderHighlightedText(element, text, term) {
+    const content = text || "";
+    const normalizedTerm = term.trim();
+    element.textContent = "";
+
+    if (!normalizedTerm) {
+        element.textContent = content;
+        return;
+    }
+
+    const regex = new RegExp(`(${escapeRegExp(normalizedTerm)})`, "ig");
+    let lastIndex = 0;
+    let match = regex.exec(content);
+
+    while (match) {
+        if (match.index > lastIndex) {
+            element.appendChild(document.createTextNode(content.slice(lastIndex, match.index)));
+        }
+
+        const highlight = document.createElement("mark");
+        highlight.className = "search-highlight";
+        highlight.textContent = match[0];
+        element.appendChild(highlight);
+
+        lastIndex = regex.lastIndex;
+        match = regex.exec(content);
+    }
+
+    if (lastIndex < content.length) {
+        element.appendChild(document.createTextNode(content.slice(lastIndex)));
+    }
+}
+
 // Rellenar datos de la tarea en el template
 function fillTaskData(taskElement, task) {
-    taskElement.querySelector(".task-title").textContent = task.title;
-    taskElement.querySelector(".task-description").textContent = task.description || "Sin descripción";
+    const term = searchTerm.trim();
+    const titleElement = taskElement.querySelector(".task-title");
+    const descriptionElement = taskElement.querySelector(".task-description");
+    const statusElement = taskElement.querySelector(".task-status");
+
+    renderHighlightedText(titleElement, task.title, term);
+    renderHighlightedText(descriptionElement, task.description || "Sin descripción", term);
     taskElement.querySelector(".task-meta").textContent = buildTaskMetaText(task);
-    taskElement.querySelector(".task-status").textContent = task.tag;
+    renderHighlightedText(statusElement, task.tag, term);
     
     const checkbox = taskElement.querySelector(".task-checkbox");
     checkbox.checked = task.completed;
@@ -811,8 +900,13 @@ function renderTasks() {
     const filteredTasks = getFilteredTasks();
     const sortedTasks = sortTasksByMode(filteredTasks);
 
+    updateSearchFeedback(sortedTasks.length);
+
     if (sortedTasks.length === 0) {
-        tasksList.innerHTML = `<li style='text-align: center; color: #999; padding: 20px;'>${getEmptyMessage()}</li>`;
+        const emptyLi = document.createElement("li");
+        emptyLi.className = "tasks-empty-message";
+        emptyLi.textContent = getEmptyMessage();
+        tasksList.appendChild(emptyLi);
         return;
     }
 
@@ -869,6 +963,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSortButtonLabels();
     
     addListenerIfExists("searchInput", "input", (e) => updateSearch(e.target.value));
+    addListenerIfExists("clearSearchBtn", "click", clearSearch);
     addListenerIfExists("toggleSortBtn", "click", toggleSortMode);
     addListenerIfExists("toggleSortDirectionBtn", "click", toggleSortDirection);
     addListenerIfExists("markAllCompleteBtn", "click", markAllTasksComplete);
