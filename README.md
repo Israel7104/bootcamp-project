@@ -17,7 +17,7 @@ TaskFlow permite:
 - Cambiar dirección de orden ascendente o descendente.
 - Ver fechas de creación y edición.
 - Usar modo oscuro.
-- Guardar datos en localStorage sin backend.
+- Sincronizar tareas con la API REST del proyecto.
 
 ## Capturas
 
@@ -33,15 +33,16 @@ Formulario de alta de tarea:
 - CSS3 (archivo propio en style.css)
 - JavaScript Vanilla (archivo principal app.js)
 - Tailwind CSS vía CDN (utilidades de layout/tema)
-- localStorage para persistencia
+- API REST con Express para operaciones CRUD
 
 ## Ejecución Local
 
 1. Clona el repositorio.
 2. Abre la carpeta del proyecto.
-3. Ejecuta un servidor estático (por ejemplo con VS Code Live Server) o abre index.html en el navegador.
+3. Inicia la API en `server/` con `npm install` y `npm run dev`.
+4. Ejecuta un servidor estático en la raíz del proyecto (por ejemplo con VS Code Live Server).
 
-No requiere instalación de dependencias ni proceso de build.
+El frontend no requiere build, pero sí necesita que la API esté disponible en `http://localhost:3000`.
 
 ## Estructura del Proyecto
 
@@ -49,7 +50,8 @@ No requiere instalación de dependencias ni proceso de build.
 .
 ├── index.html        # Estructura de la app y diálogos
 ├── style.css         # Estilos y tema claro/oscuro
-├── app.js            # Lógica principal
+├── app.js            # Lógica principal del frontend
+├── src/api/client.js # Cliente HTTP para la API de tareas
 ├── README.md
 └── docs/
 		├── design/
@@ -97,14 +99,14 @@ Cada tarea sigue esta estructura:
 - Campo de categoría libre con datalist.
 - Creación de categorías nuevas al escribir y presionar Enter.
 - Selector rápido de categorías (quick picker) en alta y edición.
-- Persistencia de categorías en localStorage.
+- Categorías derivadas de las tareas cargadas desde la API.
 
 ### Ordenación
 - Orden por creación o alfabético.
 - Dirección ascendente o descendente.
 
 ### Tema y UX
-- Modo oscuro persistente.
+- Modo oscuro con preferencia inicial del sistema.
 - Diálogo Acerca de en footer.
 - Confirmación personalizada para acciones críticas.
 
@@ -151,25 +153,22 @@ Resultado esperado: se eliminan las completadas y se actualizan contadores y lis
 
 - getElement(id): obtiene un elemento del DOM por id.
 - refreshUI(): refresca contadores, categorías, datalist y lista.
-- persistAndRefresh(): guarda tareas y refresca UI.
+- persistAndRefresh(): sincroniza categorías en memoria y refresca UI.
 - addListenerIfExists(elementId, eventName, handler): añade listeners de forma segura.
 
-### 2) Persistencia (localStorage)
+### 2) Comunicación con API
 
-- saveTasks(): guarda tareas y nextId.
-- saveCategories(): guarda categorías.
-- loadCategories(): carga categorías persistidas.
-- loadTasks(): carga tareas, migra campos antiguos y ajusta nextId.
+- loadTasks(): carga tareas desde la API y normaliza el estado inicial.
 - initializeDefaultState(): reinicia estado en memoria.
-- clearAllData(): borra todo el almacenamiento y reinicia aplicación.
+- clearAllData(): elimina tareas remotas y reinicia aplicación.
+- src/api/client.js: concentra `getTasks`, `createTask`, `updateTask` y `deleteTask`.
 
 ### 3) Creación y validación de tareas
 
-- createTask(title, description, tag): genera objeto de tarea con id y fechas.
 - formatTaskDate(dateValue): normaliza una fecha a formato es-ES.
 - buildTaskMetaText(task): compone texto Creada/Editada mostrado en tarjeta.
 - validateTaskForm(title, description, tag): valida campos y devuelve datos normalizados.
-- addTask(title, description, tag): crea, inserta, persiste y re-renderiza.
+- addTask(title, description, tag): crea una tarea vía API, actualiza estado y re-renderiza.
 - clearForm(): limpia formulario de alta.
 
 ### 4) Categorías
@@ -185,10 +184,10 @@ Resultado esperado: se eliminan las completadas y se actualizan contadores y lis
 ### 5) Estado de tareas y edición
 
 - updateCounters(): actualiza contadores de todas/pendientes/completadas.
-- deleteTask(task): elimina una tarea individual.
-- toggleTaskCompletion(task): alterna estado de completado de una tarea.
+- deleteTask(task): elimina una tarea individual vía API.
+- toggleTaskCompletion(task): alterna estado de completado vía API.
 - openEditTaskDialog(task): abre modal de edición con datos precargados.
-- submitEditTaskForm(): valida y guarda cambios de edición, actualizando updatedAt.
+- submitEditTaskForm(): valida y guarda cambios de edición vía API.
 - closeEditTaskDialog(): cierra modal de edición y limpia referencia activa.
 
 ### 6) Confirmaciones y acciones masivas
@@ -225,15 +224,14 @@ Resultado esperado: se eliminan las completadas y se actualizan contadores y lis
 ### 9) Inicialización y tema
 
 - setupFilterButtons(): conecta botones de filtro principal.
-- saveDarkModePreference(isDark): persiste preferencia de tema.
-- loadDarkModePreference(): carga y aplica tema guardado.
+- initializeDarkMode(): aplica la preferencia del sistema al arrancar.
 - updateDarkModeButtonLabel(isDark): actualiza texto del botón de tema.
 
 Eventos principales:
 
 - DOMContentLoaded: carga datos, configura listeners y prepara la interfaz.
 - Clic en Acerca de: abre diálogo informativo del proyecto.
-- Clic en botón de modo oscuro: alterna tema y persiste preferencia.
+- Clic en botón de modo oscuro: alterna tema durante la sesión actual.
 
 ## Casos de Prueba Visuales
 
@@ -253,13 +251,12 @@ Confirmación y resultado de borrado múltiple:
 ![Confirmación borrado](docs/testing/multiple_deleted_test.png)
 ![Resultado borrado](docs/testing/multiple_deleted_test2.png)
 
-## Persistencia
+## Sincronización de Datos
 
-La aplicación persiste automáticamente:
+La aplicación sincroniza automáticamente con la API:
 
-- Tareas (tasks)
-- Categorías (categories)
-- Siguiente identificador (nextId)
-- Preferencia de modo oscuro (darkMode)
+- Lectura de tareas al iniciar
+- Creación, edición y borrado de tareas
+- Actualización de estado completada/pendiente
 
-Todo se guarda en localStorage y se recupera al recargar la página.
+No hay persistencia en el navegador. El estado depende de la API en ejecución y del almacenamiento en memoria del servidor.

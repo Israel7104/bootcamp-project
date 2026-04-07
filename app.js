@@ -1,6 +1,9 @@
+import apiClient from "./src/api/client.js";
+
+const DEFAULT_CATEGORIES = ["Trabajo", "Personal", "Compras"];
+
 // Array para almacenar todas las tareas
 let tasks = [];
-let nextId = 1;
 let currentFilter = "all"; // "all", "pending", "completed"
 let searchTerm = ""; // Término de búsqueda
 let selectedCategory = "All"; // Categoría seleccionada
@@ -9,7 +12,7 @@ let sortDirection = "asc"; // "asc" o "desc"
 /** @type {Task | null} Tarea abierta en el diálogo de edición */
 let taskBeingEdited = null;
 /** @type {string[]} Lista de categorías disponibles */
-let categories = ["Trabajo", "Personal", "Compras"];
+let categories = [...DEFAULT_CATEGORIES];
 
 /**
  * @typedef {Object} Task
@@ -17,8 +20,8 @@ let categories = ["Trabajo", "Personal", "Compras"];
  * @property {string} title - Título principal de la tarea.
  * @property {string} description - Descripción opcional de la tarea.
  * @property {string} tag - Categoría o etiqueta asignada.
- * @property {Date} createdAt - Fecha de creación.
- * @property {Date|null} updatedAt - Fecha de última edición.
+ * @property {string} createdAt - Fecha de creación en formato ISO.
+ * @property {string|null} updatedAt - Fecha de última edición en formato ISO.
  * @property {boolean} completed - Estado de finalización.
  */
 
@@ -46,8 +49,25 @@ function refreshUI() {
 
 // Guardar estado y refrescar interfaz
 function persistAndRefresh() {
-    saveTasks();
+    syncCategoriesFromTasks();
     refreshUI();
+}
+
+function buildCategoriesFromTasks(taskList = tasks) {
+    const categorySet = new Set(DEFAULT_CATEGORIES);
+
+    taskList.forEach(task => {
+        const normalizedTag = typeof task.tag === "string" ? task.tag.trim() : "";
+        if (normalizedTag) {
+            categorySet.add(normalizedTag);
+        }
+    });
+
+    return Array.from(categorySet);
+}
+
+function syncCategoriesFromTasks() {
+    categories = buildCategoriesFromTasks(tasks);
 }
 
 // Registrar listener solo si el elemento existe
@@ -66,167 +86,50 @@ function addListenerIfExists(elementId, eventName, handler) {
 }
 
 // ============================================
-// FUNCIONES DE ALMACENAMIENTO (LocalStorage)
+// SINCRONIZACION CON LA API
 // ============================================
 
-// Guardar tareas en localStorage
-function saveTasks() {
-    try {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-        localStorage.setItem("nextId", nextId);
-    } catch (error) {
-        // Puede fallar si localStorage está lleno o deshabilitado
-        console.error("Error al guardar tareas en localStorage:", error);
-        alert("No se pudieron guardar los cambios. Verifica el espacio disponible.");
-    }
-}
-
-// Guardar categorías en localStorage
-function saveCategories() {
-    try {
-        localStorage.setItem("categories", JSON.stringify(categories));
-    } catch (error) {
-        console.error("Error al guardar categorías en localStorage:", error);
-    }
-}
-
-// Cargar categorías del localStorage
-function loadCategories() {
-    try {
-        const saved = localStorage.getItem("categories");
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                categories = parsed;
-            }
-        }
-    } catch (error) {
-        console.error("Error al cargar categorías de localStorage:", error);
-        categories = ["Trabajo", "Personal", "Compras"];
-    }
-}
-
-// Cargar tareas del LocalStorage
 /**
- * Carga tareas y metadatos desde localStorage.
- * Si los datos no existen o son inválidos, inicializa el estado por defecto.
- * @returns {void}
+ * Carga tareas y metadatos desde la API.
+ * Si la respuesta falla, inicializa el estado por defecto.
+ * @returns {Promise<void>}
  */
-function loadTasks() {
-    loadCategories();
+async function loadTasks() {
     try {
-        const savedTasks = localStorage.getItem("tasks");
-        const savedNextId = localStorage.getItem("nextId");
-        let tasksWereMigrated = false;
-        
-        // Si hay tareas guardadas, intentar cargarlas
-        if (savedTasks) {
-            const parsedTasks = JSON.parse(savedTasks);
-            
-            // Validar que sea un array válido
-            if (Array.isArray(parsedTasks) && parsedTasks.length > 0) {
-                tasks = parsedTasks;
-                
-                // Migrar categorías antiguas en inglés al español
-                const tagMigration = { "Work": "Trabajo", "Shopping": "Compras" };
-                tasks = tasks.map(task => ({
-                    ...task,
-                    tag: tagMigration[task.tag] || task.tag
-                }));
-
-                tasks = tasks.map(task => {
-                    const normalizedCreatedAt = task.createdAt || new Date().toISOString();
-                    const normalizedUpdatedAt = task.updatedAt || null;
-                    if (!task.createdAt || typeof task.updatedAt === "undefined") {
-                        tasksWereMigrated = true;
-                    }
-                    return {
-                        ...task,
-                        createdAt: normalizedCreatedAt,
-                        updatedAt: normalizedUpdatedAt
-                    };
-                });
-
-                // Agregar a la lista cualquier categoría personalizada de tareas existentes
-                tasks.forEach(task => {
-                    if (task.tag && !categories.includes(task.tag)) {
-                        categories.push(task.tag);
-                    }
-                });
-
-                // Cargar nextId correctamente
-                if (savedNextId) {
-                    nextId = parseInt(savedNextId);
-                    // Asegurar que nextId sea mayor que el ID máximo existente
-                    const maxId = Math.max(...tasks.map(t => t.id || 0));
-                    nextId = Math.max(nextId, maxId + 1);
-                } else {
-                    nextId = tasks.length + 1;
-                }
-
-                if (tasksWereMigrated) {
-                    saveTasks();
-                }
-                
-                console.log("Tareas cargadas desde localStorage:", tasks.length);
-            } else {
-                // JSON válido pero array vacío o inválido
-                console.log("No hay tareas guardadas o el formato es inválido");
-                initializeDefaultState();
-            }
-        } else {
-            // No hay datos guardados
-            console.log("Primera ejecución: inicializando estado por defecto");
-            initializeDefaultState();
-        }
+        tasks = await apiClient.getTasks();
+        syncCategoriesFromTasks();
+        console.log("Tareas cargadas desde la API:", tasks.length);
     } catch (error) {
-        console.error("Error al cargar tareas de localStorage:", error);
+        console.error("Error al cargar tareas desde la API:", error);
         initializeDefaultState();
+        alert("No se pudieron cargar las tareas desde el servidor.");
     }
 }
 
 // Inicializar estado por defecto
 function initializeDefaultState() {
     tasks = [];
-    nextId = 1;
-    categories = ["Trabajo", "Personal", "Compras"];
+    categories = [...DEFAULT_CATEGORIES];
 }
 
-// Limpiar localStorage y reiniciar
-function clearAllData() {
+// Eliminar todas las tareas en el servidor y reiniciar el estado local
+async function clearAllData() {
     if (confirm("¿Estás seguro de que quieres eliminar todas las tareas?")) {
-        localStorage.removeItem("tasks");
-        localStorage.removeItem("nextId");
-        localStorage.removeItem("categories");
-        initializeDefaultState();
-        refreshUI();
-        console.log("Todos los datos han sido eliminados");
+        try {
+            await Promise.all(tasks.map(task => apiClient.deleteTask(task.id)));
+            initializeDefaultState();
+            refreshUI();
+            console.log("Todos los datos han sido eliminados");
+        } catch (error) {
+            console.error("Error al eliminar todas las tareas:", error);
+            alert("No se pudieron eliminar todas las tareas.");
+        }
     }
 }
 
 // ============================================
 // FUNCIONES DE TAREAS
 // ============================================
-
-// Función constructora para crear nuevas tareas
-/**
- * Crea un objeto tarea con estructura homogénea.
- * @param {string} title - Título de la tarea.
- * @param {string} description - Descripción de la tarea.
- * @param {string} tag - Categoría seleccionada.
- * @returns {Task} Tarea lista para almacenarse en memoria.
- */
-function createTask(title, description, tag) {
-    return {
-        id: nextId++,
-        title: title,
-        description: description,
-        tag: tag,
-        createdAt: new Date(),
-        updatedAt: null,
-        completed: false
-    };
-}
 
 // Formatear fecha para mostrarla en cada tarea
 function formatTaskDate(dateValue) {
@@ -308,7 +211,6 @@ function addCategoryIfNew(tag) {
     const exists = categories.some(category => category.toLowerCase() === normalized.toLowerCase());
     if (normalized && !exists) {
         categories.push(normalized);
-        saveCategories();
     }
 }
 
@@ -406,18 +308,24 @@ function setupCategoryQuickPicker(inputId, quickPickerId) {
  * @param {string} tag - Categoría de la tarea.
  * @returns {void}
  */
-function addTask(title, description, tag) {
-    if (title.trim() === "") {
-        alert("Por favor ingresa un título para la tarea");
+async function addTask(title, description, tag) {
+    const data = validateTaskForm(title, description, tag);
+    if (!data) {
         return;
     }
 
-    const newTask = createTask(title, description, tag);
-    tasks.push(newTask);
-    addCategoryIfNew(tag);
-    saveTasks();
-    clearForm();
-    refreshUI();
+    try {
+        const newTask = await apiClient.createTask({
+            ...data,
+            completed: false
+        });
+        tasks.push(newTask);
+        persistAndRefresh();
+        clearForm();
+    } catch (error) {
+        console.error("Error al crear la tarea:", error);
+        alert(error.message || "No se pudo crear la tarea.");
+    }
 }
 
 // Función para actualizar los contadores
@@ -432,18 +340,34 @@ function updateCounters() {
 }
 
 // Función para eliminar una tarea
-function deleteTask(task) {
-    const taskIndex = tasks.indexOf(task);
-    if (taskIndex !== -1) {
-        tasks.splice(taskIndex, 1);
+async function deleteTask(task) {
+    try {
+        await apiClient.deleteTask(task.id);
+        tasks = tasks.filter(currentTask => currentTask.id !== task.id);
         persistAndRefresh();
+    } catch (error) {
+        console.error("Error al eliminar la tarea:", error);
+        alert(error.message || "No se pudo eliminar la tarea.");
     }
 }
 
 // Función para cambiar el estado de completado de una tarea
-function toggleTaskCompletion(task) {
-    task.completed = !task.completed;
-    persistAndRefresh();
+async function toggleTaskCompletion(task) {
+    try {
+        const updatedTask = await apiClient.updateTask(task.id, {
+            title: task.title,
+            description: task.description,
+            tag: task.tag,
+            completed: !task.completed
+        });
+
+        Object.assign(task, updatedTask);
+        persistAndRefresh();
+    } catch (error) {
+        console.error("Error al actualizar el estado de la tarea:", error);
+        alert(error.message || "No se pudo actualizar la tarea.");
+        renderTasks();
+    }
 }
 
 /**
@@ -463,7 +387,7 @@ function openEditTaskDialog(task) {
  * Aplica los cambios del formulario de edición si pasan la validación.
  * @returns {void}
  */
-function submitEditTaskForm() {
+async function submitEditTaskForm() {
     if (!taskBeingEdited) {
         return;
     }
@@ -474,20 +398,21 @@ function submitEditTaskForm() {
     if (!data) {
         return;
     }
-    const wasEdited = taskBeingEdited.title !== data.title
-        || taskBeingEdited.description !== data.description
-        || taskBeingEdited.tag !== data.tag;
+    try {
+        const updatedTask = await apiClient.updateTask(taskBeingEdited.id, {
+            ...data,
+            completed: taskBeingEdited.completed
+        });
 
-    taskBeingEdited.title = data.title;
-    taskBeingEdited.description = data.description;
-    taskBeingEdited.tag = data.tag;
-    if (wasEdited) {
-        taskBeingEdited.updatedAt = new Date();
+        Object.assign(taskBeingEdited, updatedTask);
+        addCategoryIfNew(data.tag);
+        taskBeingEdited = null;
+        getElement("editTaskDialog").close();
+        persistAndRefresh();
+    } catch (error) {
+        console.error("Error al editar la tarea:", error);
+        alert(error.message || "No se pudieron guardar los cambios.");
     }
-    taskBeingEdited = null;
-    addCategoryIfNew(data.tag);
-    getElement("editTaskDialog").close();
-    persistAndRefresh();
 }
 
 function closeEditTaskDialog() {
@@ -574,14 +499,27 @@ async function markAllTasksComplete() {
         return;
     }
 
-    visibleTasks.forEach(task => {
-        task.completed = !allCompleted;
-    });
-    persistAndRefresh();
+    try {
+        const updatedTasks = await Promise.all(
+            visibleTasks.map(task => apiClient.updateTask(task.id, {
+                title: task.title,
+                description: task.description,
+                tag: task.tag,
+                completed: !allCompleted
+            }))
+        );
+
+        const updatedTasksById = new Map(updatedTasks.map(task => [task.id, task]));
+        tasks = tasks.map(task => updatedTasksById.get(task.id) || task);
+        persistAndRefresh();
+    } catch (error) {
+        console.error("Error al actualizar las tareas visibles:", error);
+        alert(error.message || "No se pudieron actualizar las tareas visibles.");
+    }
 }
 
 // Función para eliminar todas las tareas completadas
-function deleteAllCompletedTasks() {
+async function deleteAllCompletedTasks() {
     const completedCount = tasks.filter(task => task.completed).length;
     
     if (completedCount === 0) {
@@ -589,13 +527,20 @@ function deleteAllCompletedTasks() {
         return;
     }
 
-    showStyledConfirm(`¿Deseas eliminar ${completedCount} tarea${completedCount !== 1 ? 's' : ''} completada${completedCount !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`).then((confirmed) => {
-        if (!confirmed) {
-            return;
-        }
+    const confirmed = await showStyledConfirm(`¿Deseas eliminar ${completedCount} tarea${completedCount !== 1 ? 's' : ''} completada${completedCount !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const completedTasks = tasks.filter(task => task.completed);
+        await Promise.all(completedTasks.map(task => apiClient.deleteTask(task.id)));
         tasks = tasks.filter(task => !task.completed);
         persistAndRefresh();
-    });
+    } catch (error) {
+        console.error("Error al eliminar las tareas completadas:", error);
+        alert(error.message || "No se pudieron eliminar las tareas completadas.");
+    }
 }
 
 // ============================================
@@ -1007,20 +952,20 @@ function setupFilterButtons() {
 }
 
 // Inicializar la aplicación cuando carga el DOM
-document.addEventListener("DOMContentLoaded", () => {
-    // Cargar tareas guardadas
-    loadTasks();
+document.addEventListener("DOMContentLoaded", async () => {
+    // Cargar tareas desde la API
+    await loadTasks();
     refreshUI();
     
     const form = document.querySelector("form");
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const title = getElement("task").value;
         const description = getElement("description").value;
         const tag = getElement("tags").value;
 
-        addTask(title, description, tag);
+        await addTask(title, description, tag);
     });
 
     setupFilterButtons();
@@ -1048,9 +993,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const editDialog = getElement("editTaskDialog");
-    getElement("editTaskForm").addEventListener("submit", (e) => {
+    getElement("editTaskForm").addEventListener("submit", async (e) => {
         e.preventDefault();
-        submitEditTaskForm();
+        await submitEditTaskForm();
     });
     getElement("editTaskCancel").addEventListener("click", () => closeEditTaskDialog());
     editDialog.addEventListener("close", () => {
@@ -1087,27 +1032,12 @@ if (aboutDialog) {
 // =============================================
 const darkModeToggle = document.getElementById('darkModeToggle');
 
-// 1. Definir la función de guardado
-/**
- * Persiste la preferencia de modo oscuro en localStorage.
- * @param {boolean} isDark - Indica si el modo oscuro está activo.
- * @returns {void}
- */
-function saveDarkModePreference(isDark) {
-    localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
-}
+function initializeDarkMode() {
+    const prefersDarkMode = globalThis.matchMedia
+        && globalThis.matchMedia("(prefers-color-scheme: dark)").matches;
 
-// 2. Definir la función de carga
-/**
- * Aplica la preferencia de modo oscuro almacenada al cargar la página.
- * @returns {void}
- */
-function loadDarkModePreference() {
-    const darkModeSetting = localStorage.getItem("darkMode");
-    if (darkModeSetting === "enabled") {
-        document.documentElement.classList.add("dark");
-    }
-    updateDarkModeButtonLabel(document.documentElement.classList.contains("dark"));
+    document.documentElement.classList.toggle("dark", prefersDarkMode);
+    updateDarkModeButtonLabel(prefersDarkMode);
 }
 
 /**
@@ -1122,15 +1052,13 @@ function updateDarkModeButtonLabel(isDark) {
     darkModeToggle.textContent = isDark ? "Modo Claro" : "Modo Oscuro";
 }
 
-// 3. Ejecutar carga al iniciar
-loadDarkModePreference();
+// 3. Aplicar preferencia del sistema al iniciar
+initializeDarkMode();
 
 // 4. Evento del botón
 if (darkModeToggle) {
     darkModeToggle.addEventListener("click", () => {
-        // Alterna la clase en el HTML (raíz)
         const isDark = document.documentElement.classList.toggle("dark");
-        saveDarkModePreference(isDark);
         updateDarkModeButtonLabel(isDark);
     });
 }

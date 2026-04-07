@@ -11,6 +11,7 @@ const taskService = {
       id: nextId++,
       title: data.title,
       description: data.description || '',
+      tag: data.tag || '',
       status: data.status || 'pending',
       createdAt: new Date(),
       updatedAt: null
@@ -34,6 +35,7 @@ const taskService = {
     }
     if (data.title) task.title = data.title;
     if (data.description !== undefined) task.description = data.description;
+    if (data.tag !== undefined) task.tag = data.tag;
     if (data.status) task.status = data.status;
     task.updatedAt = new Date();
     return task;
