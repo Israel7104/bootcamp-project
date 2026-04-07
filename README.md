@@ -23,7 +23,8 @@ Demo en producción: https://bootcamp-project-nine.vercel.app/
 5. [Modelos de datos](#5-modelos-de-datos)
 6. [API REST — referencia completa](#6-api-rest--referencia-completa)
 7. [Ejecución local](#7-ejecución-local)
-8. [Capturas de pantalla](#8-capturas-de-pantalla)
+8. [Despliegue del backend en Vercel](#8-despliegue-del-backend-en-vercel)
+9. [Capturas de pantalla](#9-capturas-de-pantalla)
 
 ---
 
@@ -637,7 +638,7 @@ npm run dev
 # 4. En otra terminal, servir el frontend desde la raíz del proyecto
 cd ..
 npx serve .
-# → Frontend disponible en http://localhost:3000 (puerto distinto al del servidor)
+# → Frontend disponible en un puerto distinto al del servidor (por ejemplo http://localhost:3001)
 ```
 
 ### Variables de entorno
@@ -663,7 +664,40 @@ Para apuntar el frontend a un servidor en otro puerto o dominio, define la varia
 
 ---
 
-## 8. Capturas de pantalla
+## 8. Despliegue del backend en Vercel
+
+El backend ya está preparado para despliegue serverless en Vercel:
+
+- `server/vercel.json` define el builder `@vercel/node` y enruta todas las rutas a `src/index.js`.
+- `server/src/index.js` evita `app.listen(...)` cuando detecta entorno Vercel (`process.env.VERCEL === "1"`).
+- `server/package.json` incluye `npm run start` para ejecución estándar fuera de Vercel.
+
+### Pasos recomendados
+
+1. Crea un proyecto nuevo en Vercel importando este repositorio.
+2. Configura el **Root Directory** del proyecto como `server`.
+3. En Build & Development Settings:
+  - Install Command: `npm install`
+  - Build Command: vacío (no se requiere build)
+  - Output Directory: vacío
+4. Despliega.
+5. Verifica el health check en:
+  - `https://<tu-proyecto>.vercel.app/api/v1/health`
+
+### Conectar el frontend al backend desplegado
+
+Antes de cargar `app.js`, define la URL base de la API en `index.html`:
+
+```html
+<script>
+  window.TASKFLOW_API_BASE_URL = "https://<tu-proyecto-backend>.vercel.app/api/v1";
+</script>
+<script type="module" src="app.js"></script>
+```
+
+---
+
+## 9. Capturas de pantalla
 
 Página principal:
 ![Pantalla principal](docs/design/home.png)
@@ -686,77 +720,6 @@ Múltiples tareas completadas:
 Confirmación y resultado de borrado múltiple:
 ![Confirmación borrado](docs/testing/multiple_deleted_test.png)
 ![Resultado borrado](docs/testing/multiple_deleted_test2.png)
-
-
-## Vista General
-
-TaskFlow permite:
-
-- Crear tareas con título, descripción y categoría.
-- Editar y eliminar tareas existentes.
-- Marcar tareas como completadas de forma individual o masiva.
-- Filtrar por estado, categoría y término de búsqueda.
-- Ordenar por fecha de creación o alfabéticamente.
-- Cambiar dirección de orden ascendente o descendente.
-- Ver fechas de creación y edición.
-- Usar modo oscuro.
-- Sincronizar tareas con la API REST del proyecto.
-
-## Capturas
-
-Página principal:
-![Pantalla principal](docs/design/home.png)
-
-Formulario de alta de tarea:
-![Formulario de tarea](docs/design/add_task.png)
-
-## Tecnologías
-
-- HTML5
-- CSS3 (archivo propio en style.css)
-- JavaScript Vanilla (archivo principal app.js)
-- Tailwind CSS vía CDN (utilidades de layout/tema)
-- API REST con Express para operaciones CRUD
-
-## Ejecución Local
-
-1. Clona el repositorio.
-2. Abre la carpeta del proyecto.
-3. Inicia la API en `server/` con `npm install` y `npm run dev`.
-4. Ejecuta un servidor estático en la raíz del proyecto (por ejemplo con VS Code Live Server).
-
-El frontend no requiere build, pero sí necesita que la API esté disponible en `http://localhost:3000`.
-
-## Estructura del Proyecto
-
-```
-.
-├── index.html        # Estructura de la app y diálogos
-├── style.css         # Estilos y tema claro/oscuro
-├── app.js            # Lógica principal del frontend
-├── src/api/client.js # Cliente HTTP para la API de tareas
-├── README.md
-└── docs/
-		├── design/
-		├── testing/
-		└── ai/
-```
-
-## Modelo de Datos
-
-Cada tarea sigue esta estructura:
-
-```js
-{
-	id: number,
-	title: string,
-	description: string,
-	tag: string,
-	createdAt: Date | string,
-	updatedAt: Date | string | null,
-	completed: boolean
-}
-```
 
 ## Funcionalidades Detalladas
 
