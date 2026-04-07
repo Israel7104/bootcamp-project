@@ -90,6 +90,11 @@ const getSafeErrorMessage = (statusCode, isDevelopment) => {
 
 // Middleware de manejo de errores global (4 parámetros)
 app.use((err, req, res, next) => {
+    // Si la respuesta ya fue enviada, delega al manejador por defecto de Express
+    if (res.headersSent) {
+        return next(err);
+    }
+
     const timestamp = new Date().toISOString();
     const isDevelopment = process.env.NODE_ENV === 'development';
     
