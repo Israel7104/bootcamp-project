@@ -13,6 +13,8 @@ let sortDirection = "asc"; // "asc" o "desc"
 let taskBeingEdited = null;
 /** @type {string[]} Lista de categorías disponibles */
 let categories = [...DEFAULT_CATEGORIES];
+let activeRequests = 0;
+let networkState = { status: "idle", message: "" };
 
 /**
  * @typedef {Object} Task
@@ -39,12 +41,95 @@ function getElement(id) {
     return document.getElementById(id);
 }
 
+function isNetworkBusy() {
+    return activeRequests > 0;
+}
+
+function getNetworkErrorMessage(error, fallbackMessage) {
+    if (error?.status >= 500) {
+        return "El servidor devolvió un error interno. Inténtalo de nuevo en unos segundos.";
+    }
+
+    if (error?.status >= 400) {
+        return error.message || fallbackMessage;
+    }
+
+    return fallbackMessage || error?.message || "No se pudo conectar con el servidor.";
+}
+
+function renderNetworkFeedback() {
+    const container = getElement("networkState");
+    const messageElement = getElement("networkStateMessage");
+    const spinner = getElement("networkStateSpinner");
+    const retryButton = getElement("retryLoadBtn");
+
+    if (!container || !messageElement || !spinner || !retryButton) {
+        return;
+    }
+
+    const shouldShow = networkState.status === "loading" || networkState.status === "error";
+    container.hidden = !shouldShow;
+    if (!shouldShow) {
+        return;
+    }
+
+    container.className = `network-state network-state--${networkState.status}`;
+    messageElement.textContent = networkState.message;
+    spinner.hidden = networkState.status !== "loading";
+    retryButton.classList.toggle("hidden", networkState.status !== "error");
+}
+
+function updateInteractiveControls() {
+    const controls = document.querySelectorAll("main input, main textarea, main button, aside .filter-btn");
+    const shouldDisable = isNetworkBusy();
+
+    controls.forEach((control) => {
+        if (control.id === "retryLoadBtn") {
+            control.disabled = false;
+            return;
+        }
+
+        control.disabled = shouldDisable;
+    });
+}
+
+function syncNetworkUi() {
+    renderNetworkFeedback();
+    renderTasks();
+    updateInteractiveControls();
+}
+
+function startNetworkRequest(message) {
+    activeRequests += 1;
+    networkState = { status: "loading", message };
+    syncNetworkUi();
+}
+
+function finishNetworkRequest() {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (activeRequests === 0) {
+        networkState = { status: "success", message: "" };
+    }
+    syncNetworkUi();
+}
+
+function failNetworkRequest(error, fallbackMessage) {
+    activeRequests = Math.max(0, activeRequests - 1);
+    networkState = {
+        status: "error",
+        message: getNetworkErrorMessage(error, fallbackMessage)
+    };
+    syncNetworkUi();
+}
+
 // Limpiar y refrescar la interfaz
 function refreshUI() {
     updateCounters();
     renderSidebarCategories();
     updateCategoriesDatalist();
+    renderNetworkFeedback();
     renderTasks();
+    updateInteractiveControls();
 }
 
 // Guardar estado y refrescar interfaz
@@ -95,14 +180,17 @@ function addListenerIfExists(elementId, eventName, handler) {
  * @returns {Promise<void>}
  */
 async function loadTasks() {
+    startNetworkRequest("Cargando tareas desde el servidor...");
+
     try {
         tasks = await apiClient.getTasks();
         syncCategoriesFromTasks();
         console.log("Tareas cargadas desde la API:", tasks.length);
+        finishNetworkRequest();
     } catch (error) {
         console.error("Error al cargar tareas desde la API:", error);
         initializeDefaultState();
-        alert("No se pudieron cargar las tareas desde el servidor.");
+        failNetworkRequest(error, "No se pudieron cargar las tareas desde el servidor.");
     }
 }
 
@@ -115,14 +203,17 @@ function initializeDefaultState() {
 // Eliminar todas las tareas en el servidor y reiniciar el estado local
 async function clearAllData() {
     if (confirm("¿Estás seguro de que quieres eliminar todas las tareas?")) {
+        startNetworkRequest("Eliminando todas las tareas...");
+
         try {
             await Promise.all(tasks.map(task => apiClient.deleteTask(task.id)));
             initializeDefaultState();
+            finishNetworkRequest();
             refreshUI();
             console.log("Todos los datos han sido eliminados");
         } catch (error) {
             console.error("Error al eliminar todas las tareas:", error);
-            alert("No se pudieron eliminar todas las tareas.");
+            failNetworkRequest(error, "No se pudieron eliminar todas las tareas.");
         }
     }
 }
@@ -314,17 +405,20 @@ async function addTask(title, description, tag) {
         return;
     }
 
+    startNetworkRequest("Guardando tarea...");
+
     try {
         const newTask = await apiClient.createTask({
             ...data,
             completed: false
         });
         tasks.push(newTask);
+        finishNetworkRequest();
         persistAndRefresh();
         clearForm();
     } catch (error) {
         console.error("Error al crear la tarea:", error);
-        alert(error.message || "No se pudo crear la tarea.");
+        failNetworkRequest(error, "No se pudo crear la tarea.");
     }
 }
 
@@ -341,18 +435,23 @@ function updateCounters() {
 
 // Función para eliminar una tarea
 async function deleteTask(task) {
+    startNetworkRequest("Eliminando tarea...");
+
     try {
         await apiClient.deleteTask(task.id);
         tasks = tasks.filter(currentTask => currentTask.id !== task.id);
+        finishNetworkRequest();
         persistAndRefresh();
     } catch (error) {
         console.error("Error al eliminar la tarea:", error);
-        alert(error.message || "No se pudo eliminar la tarea.");
+        failNetworkRequest(error, "No se pudo eliminar la tarea.");
     }
 }
 
 // Función para cambiar el estado de completado de una tarea
 async function toggleTaskCompletion(task) {
+    startNetworkRequest("Actualizando estado de la tarea...");
+
     try {
         const updatedTask = await apiClient.updateTask(task.id, {
             title: task.title,
@@ -362,10 +461,11 @@ async function toggleTaskCompletion(task) {
         });
 
         Object.assign(task, updatedTask);
+        finishNetworkRequest();
         persistAndRefresh();
     } catch (error) {
         console.error("Error al actualizar el estado de la tarea:", error);
-        alert(error.message || "No se pudo actualizar la tarea.");
+        failNetworkRequest(error, "No se pudo actualizar la tarea.");
         renderTasks();
     }
 }
@@ -398,6 +498,9 @@ async function submitEditTaskForm() {
     if (!data) {
         return;
     }
+
+    startNetworkRequest("Guardando cambios de la tarea...");
+
     try {
         const updatedTask = await apiClient.updateTask(taskBeingEdited.id, {
             ...data,
@@ -408,10 +511,11 @@ async function submitEditTaskForm() {
         addCategoryIfNew(data.tag);
         taskBeingEdited = null;
         getElement("editTaskDialog").close();
+        finishNetworkRequest();
         persistAndRefresh();
     } catch (error) {
         console.error("Error al editar la tarea:", error);
-        alert(error.message || "No se pudieron guardar los cambios.");
+        failNetworkRequest(error, "No se pudieron guardar los cambios.");
     }
 }
 
@@ -499,6 +603,10 @@ async function markAllTasksComplete() {
         return;
     }
 
+    startNetworkRequest(allCompleted
+        ? "Desmarcando tareas visibles..."
+        : "Marcando tareas visibles como completadas...");
+
     try {
         const updatedTasks = await Promise.all(
             visibleTasks.map(task => apiClient.updateTask(task.id, {
@@ -511,10 +619,11 @@ async function markAllTasksComplete() {
 
         const updatedTasksById = new Map(updatedTasks.map(task => [task.id, task]));
         tasks = tasks.map(task => updatedTasksById.get(task.id) || task);
+        finishNetworkRequest();
         persistAndRefresh();
     } catch (error) {
         console.error("Error al actualizar las tareas visibles:", error);
-        alert(error.message || "No se pudieron actualizar las tareas visibles.");
+        failNetworkRequest(error, "No se pudieron actualizar las tareas visibles.");
     }
 }
 
@@ -532,14 +641,17 @@ async function deleteAllCompletedTasks() {
         return;
     }
 
+    startNetworkRequest("Eliminando tareas completadas...");
+
     try {
         const completedTasks = tasks.filter(task => task.completed);
         await Promise.all(completedTasks.map(task => apiClient.deleteTask(task.id)));
         tasks = tasks.filter(task => !task.completed);
+        finishNetworkRequest();
         persistAndRefresh();
     } catch (error) {
         console.error("Error al eliminar las tareas completadas:", error);
-        alert(error.message || "No se pudieron eliminar las tareas completadas.");
+        failNetworkRequest(error, "No se pudieron eliminar las tareas completadas.");
     }
 }
 
@@ -808,6 +920,7 @@ function fillTaskData(taskElement, task) {
     
     const checkbox = taskElement.querySelector(".task-checkbox");
     checkbox.checked = task.completed;
+    checkbox.disabled = isNetworkBusy();
 }
 
 // Crear botón de acción de tarea
@@ -852,6 +965,8 @@ function renderTaskItem(task) {
     
     const editBtn = createTaskActionButton("Editar", "edit-btn", () => openEditTaskDialog(task));
     const deleteBtn = createTaskActionButton("Eliminar", "delete-btn", () => deleteTask(task));
+    editBtn.disabled = isNetworkBusy();
+    deleteBtn.disabled = isNetworkBusy();
     
     buttonsContainer.appendChild(editBtn);
     buttonsContainer.appendChild(deleteBtn);
@@ -906,7 +1021,36 @@ function renderSidebarCategories() {
 // Función para renderizar todas las tareas en el DOM
 function renderTasks() {
     const tasksList = getElement("tasksList");
+    if (!tasksList) {
+        return;
+    }
+
     tasksList.innerHTML = "";
+
+    if (networkState.status === "loading" && tasks.length === 0) {
+        const loadingLi = document.createElement("li");
+        const spinner = document.createElement("span");
+        const message = document.createElement("span");
+
+        loadingLi.className = "tasks-loading-message";
+        spinner.className = "loading-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        message.textContent = networkState.message || "Cargando tareas...";
+        loadingLi.appendChild(spinner);
+        loadingLi.appendChild(message);
+        tasksList.appendChild(loadingLi);
+        updateSearchFeedback(0);
+        return;
+    }
+
+    if (networkState.status === "error" && tasks.length === 0) {
+        const errorLi = document.createElement("li");
+        errorLi.className = "tasks-error-message";
+        errorLi.textContent = networkState.message || "No se pudieron cargar las tareas.";
+        tasksList.appendChild(errorLi);
+        updateSearchFeedback(0);
+        return;
+    }
 
     const filteredTasks = getFilteredTasks();
     const sortedTasks = sortTasksByMode(filteredTasks);
@@ -979,6 +1123,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     addListenerIfExists("toggleSortDirectionBtn", "click", toggleSortDirection);
     addListenerIfExists("markAllCompleteBtn", "click", markAllTasksComplete);
     addListenerIfExists("deleteCompletedBtn", "click", deleteAllCompletedTasks);
+    addListenerIfExists("retryLoadBtn", "click", async () => {
+        await loadTasks();
+        refreshUI();
+    });
     
     // Listener para "Todas las categorías"; el resto se gestiona en renderSidebarCategories()
     const allCategoryItem = document.querySelector('[data-category="All"]');

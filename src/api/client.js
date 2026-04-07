@@ -10,13 +10,22 @@ function getApiBaseUrl() {
 }
 
 async function request(path, options = {}) {
-    const response = await fetch(`${getApiBaseUrl()}${path}`, {
-        headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-        },
-        ...options
-    });
+    let response;
+
+    try {
+        response = await fetch(`${getApiBaseUrl()}${path}`, {
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            },
+            ...options
+        });
+    } catch (error) {
+        const networkError = new Error("No se pudo conectar con el servidor.");
+        networkError.status = 0;
+        networkError.cause = error;
+        throw networkError;
+    }
 
     if (response.status === 204) {
         return null;
@@ -25,7 +34,10 @@ async function request(path, options = {}) {
     const data = await response.json().catch(() => null);
     if (!response.ok) {
         const message = data?.error || "No se pudo completar la solicitud al servidor.";
-        throw new Error(message);
+        const requestError = new Error(message);
+        requestError.status = response.status;
+        requestError.details = data;
+        throw requestError;
     }
 
     return data;

@@ -298,6 +298,32 @@ html.dark .confirm-dialog__btn--secondary:hover {
     background-color: #4b5563;
 }
 
+html.dark .network-state--loading {
+    background-color: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.2);
+    color: #bae6fd;
+}
+
+html.dark .network-state--error {
+    background-color: rgba(248, 113, 113, 0.14);
+    border-color: rgba(248, 113, 113, 0.24);
+    color: #fecaca;
+}
+
+html.dark .tasks-empty-message,
+html.dark .tasks-loading-message,
+html.dark .tasks-error-message {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+}
+
+html.dark .tasks-error-message {
+    background-color: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.18);
+    color: #fecaca;
+}
+
 /* ============================================ */
 /* FORM                                         */
 /* ============================================ */
@@ -606,6 +632,68 @@ aside li:hover {
     background-color: #5a6268;
 }
 
+.network-state {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid transparent;
+}
+
+.network-state[hidden] {
+    display: none;
+}
+
+.network-state__content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.network-state__message {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.network-state__retry {
+    width: auto;
+    min-height: 38px;
+    padding: 8px 14px;
+    border-radius: 999px;
+}
+
+.network-state--loading {
+    background-color: rgba(23, 162, 184, 0.08);
+    border-color: rgba(23, 162, 184, 0.18);
+    color: #0f4c5c;
+}
+
+.network-state--error {
+    background-color: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.18);
+    color: #7f1d1d;
+}
+
+.loading-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 123, 255, 0.18);
+    border-top-color: var(--color-primary);
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* ============================================ */
 /* CATEGORY QUICK PICKER                        */
 /* ============================================ */
@@ -669,6 +757,29 @@ aside li:hover {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
+}
+
+.tasks-empty-message,
+.tasks-loading-message,
+.tasks-error-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    min-height: 180px;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: 2px dashed var(--color-border);
+    background-color: rgba(0, 123, 255, 0.03);
+    color: var(--color-text-light);
+    text-align: center;
+    line-height: 1.6;
+}
+
+.tasks-error-message {
+    background-color: rgba(220, 53, 69, 0.05);
+    border-color: rgba(220, 53, 69, 0.18);
+    color: #991b1b;
 }
 
 .task-item {

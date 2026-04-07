@@ -95,6 +95,13 @@
                 </button>
             </div>
             <div id="searchFeedback" class="search-feedback"></div>
+            <div id="networkState" class="network-state" hidden aria-live="polite">
+                <div class="network-state__content">
+                    <span id="networkStateSpinner" class="loading-spinner" aria-hidden="true"></span>
+                    <p id="networkStateMessage" class="network-state__message"></p>
+                </div>
+                <button type="button" id="retryLoadBtn" class="network-state__retry hidden">Reintentar</button>
+            </div>
         </section>
         <!-- plantilla de tarea -->
         <template id="taskTemplate" class="hidden">
