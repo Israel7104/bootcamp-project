@@ -8,6 +8,7 @@ dotenv.config();
 
 // Crear instancia de express
 const app = express();
+const isVercelEnvironment = process.env.VERCEL === '1';
 
 // Configuración del puerto
 const PORT = process.env.PORT || 3000;
@@ -106,40 +107,42 @@ app.use((err, req, res, next) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-// Iniciar servidor
-const server = app.listen(PORT, () => {
-    console.log(`\n🚀 Servidor ejecutándose en http://localhost:${PORT}`);
-    console.log(`📝 API de Tareas disponible en http://localhost:${PORT}/api/v1/tasks\n`);
-});
-
-// Manejo de excepciones síncronas no capturadas
-process.on('uncaughtException', (err) => {
-    const timestamp = new Date().toISOString();
-    console.error(`\n[${timestamp}] 🔴 EXCEPCIÓN NO CAPTURADA (síncronamente):`);
-    console.error(`  ${err.message}`);
-    console.error(`  Stack trace:\n${err.stack}\n`);
-    process.exit(1);
-});
-
-// Manejo de rechazos de promesas no manejados (async)
-process.on('unhandledRejection', (reason, promise) => {
-    const timestamp = new Date().toISOString();
-    console.error(`\n[${timestamp}] 🔴 RECHAZO DE PROMESA NO MANEJADO:`);
-    console.error(`  Promesa: ${promise}`);
-    console.error(`  Razón: ${reason}`);
-    if (reason instanceof Error) {
-        console.error(`  Stack trace:\n${reason.stack}\n`);
-    }
-    process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('\n⛔ SIGTERM recibido. Cerrando servidor...');
-    server.close(() => {
-        console.log('✅ Servidor cerrado correctamente\n');
-        process.exit(0);
+if (!isVercelEnvironment) {
+    // Iniciar servidor local
+    const server = app.listen(PORT, () => {
+        console.log(`\n🚀 Servidor ejecutándose en http://localhost:${PORT}`);
+        console.log(`📝 API de Tareas disponible en http://localhost:${PORT}/api/v1/tasks\n`);
     });
-});
+
+    // Manejo de excepciones síncronas no capturadas
+    process.on('uncaughtException', (err) => {
+        const timestamp = new Date().toISOString();
+        console.error(`\n[${timestamp}] 🔴 EXCEPCIÓN NO CAPTURADA (síncronamente):`);
+        console.error(`  ${err.message}`);
+        console.error(`  Stack trace:\n${err.stack}\n`);
+        process.exit(1);
+    });
+
+    // Manejo de rechazos de promesas no manejados (async)
+    process.on('unhandledRejection', (reason, promise) => {
+        const timestamp = new Date().toISOString();
+        console.error(`\n[${timestamp}] 🔴 RECHAZO DE PROMESA NO MANEJADO:`);
+        console.error(`  Promesa: ${promise}`);
+        console.error(`  Razón: ${reason}`);
+        if (reason instanceof Error) {
+            console.error(`  Stack trace:\n${reason.stack}\n`);
+        }
+        process.exit(1);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+        console.log('\n⛔ SIGTERM recibido. Cerrando servidor...');
+        server.close(() => {
+            console.log('✅ Servidor cerrado correctamente\n');
+            process.exit(0);
+        });
+    });
+}
 
 export default app;
