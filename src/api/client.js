@@ -1,4 +1,18 @@
-const DEFAULT_API_BASE_URL = "http://localhost:3000/api/v1";
+const DEFAULT_LOCAL_API_BASE_URL = "http://localhost:3000/api/v1";
+
+function getDefaultApiBaseUrl() {
+    const currentLocation = globalThis.location;
+    if (!currentLocation || !currentLocation.hostname) {
+        return DEFAULT_LOCAL_API_BASE_URL;
+    }
+
+    const isLocalHost = ["localhost", "127.0.0.1"].includes(currentLocation.hostname);
+    if (isLocalHost) {
+        return DEFAULT_LOCAL_API_BASE_URL;
+    }
+
+    return `${currentLocation.origin}/api/v1`;
+}
 
 function getApiBaseUrl() {
     const configuredBaseUrl = globalThis.TASKFLOW_API_BASE_URL;
@@ -6,7 +20,7 @@ function getApiBaseUrl() {
         return configuredBaseUrl.replace(/\/$/, "");
     }
 
-    return DEFAULT_API_BASE_URL;
+    return getDefaultApiBaseUrl();
 }
 
 async function request(path, options = {}) {

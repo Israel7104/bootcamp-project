@@ -666,23 +666,25 @@ Para apuntar el frontend a un servidor en otro puerto o dominio, define la varia
 
 ## 8. Despliegue del backend en Vercel
 
-El backend ya está preparado para despliegue serverless en Vercel:
+Configuración para **un único proyecto Vercel** (frontend + API en el mismo dominio), sin `package.json` en raíz:
 
-- `server/vercel.json` define el builder `@vercel/node` y enruta todas las rutas a `src/index.js`.
+- `vercel.json` (en la raíz) enruta `/api/*` hacia `server/src/index.js` y sirve los archivos estáticos del frontend.
 - `server/src/index.js` evita `app.listen(...)` cuando detecta entorno Vercel (`process.env.VERCEL === "1"`).
-- `server/package.json` incluye `npm run start` para ejecución estándar fuera de Vercel.
+- Las dependencias del backend permanecen en `server/package.json`.
 
-### Pasos recomendados
+### Pasos recomendados (alternativa 2)
 
 1. Crea un proyecto nuevo en Vercel importando este repositorio.
-2. Configura el **Root Directory** del proyecto como `server`.
-3. En Build & Development Settings:
-  - Install Command: `npm install`
+2. Mantén **Root Directory** en la raíz del repo (no en `server`).
+3. En Build & Development Settings configura:
+  - Install Command: `cd server && npm install`
   - Build Command: vacío (no se requiere build)
   - Output Directory: vacío
-4. Despliega.
+4. Despliega de nuevo.
 5. Verifica el health check en:
   - `https://<tu-proyecto>.vercel.app/api/v1/health`
+
+Si `/api/v1/health` devuelve 200, el backend ya está activo en el mismo dominio del frontend.
 
 ### Conectar el frontend al backend desplegado
 
