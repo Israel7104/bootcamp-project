@@ -1,4 +1,4 @@
-import apiClient from "./src/api/client.js";
+import apiClient from "./src/api/client.js?v=20260407";
 
 const DEFAULT_CATEGORIES = ["Trabajo", "Personal", "Compras"];
 
