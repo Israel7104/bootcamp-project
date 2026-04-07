@@ -95,48 +95,15 @@ app.use((err, req, res, next) => {
         return next(err);
     }
 
-    const timestamp = new Date().toISOString();
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
-    // Determinar el código de estado HTTP de manera semántica
-    const statusCode = getHttpStatus(err);
-    
-    // Logging detallado: Siempre registra la traza completa del error
-    const errorDetails = {
-        timestamp,
-        statusCode,
-        method: req.method,
-        path: req.path,
-        message: err.message,
-        name: err.name,
-        ...(isDevelopment && { stack: err.stack }),
-        ...(isDevelopment && { url: req.originalUrl })
-    };
-    
-    // Registro detallado para debugging
-    console.error(`\n[${timestamp}] 🔴 ERROR HTTP ${statusCode}:`);
-    console.error(`  📍 ${err.name}: ${err.message}`);
-    console.error(`  🌐 ${req.method} ${req.path}`);
-    if (isDevelopment) {
-        console.error(`  📋 Stack trace:\n${err.stack}\n`);
-    } else {
-        console.error('  (Stack trace oculto en producción)\n');
+    // Mapeo semántico mínimo: errores de cliente conocidos
+    const errorMessage = (err?.message || '').toUpperCase();
+    if (errorMessage.includes('NOT_FOUND')) {
+        return res.status(404).json({ error: 'Recurso no encontrado' });
     }
-    
-    // Construir respuesta segura sin filtrar detalles sensibles
-    const clientResponse = {
-        error: getSafeErrorMessage(statusCode, isDevelopment),
-        timestamp
-    };
-    
-    // En desarrollo, incluir más información para debugging
-    if (isDevelopment) {
-        clientResponse.details = err.message;
-        clientResponse.type = err.name;
-    }
-    
-    // Enviar respuesta
-    res.status(statusCode).json(clientResponse);
+
+    // Fallo no controlado: registrar traza completa y responder genérico
+    console.error(err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
 });
 
 // Iniciar servidor
