@@ -1,3 +1,71 @@
+# Documentación del Backend API
+
+Este documento reúne la información técnica del backend que estaba en el `README.md`.
+Contiene detalles de la API, configuración, rutas principales y comandos de ejecución.
+
+## Descripción general
+
+El backend está construido con Node.js y Express, y expone una API REST para gestionar las tareas de la aplicación.
+El frontend consume estas rutas para crear, leer, actualizar y eliminar tareas.
+
+## Instalación y ejecución
+
+1. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+2. Ejecuta el servidor en modo de desarrollo:
+   ```bash
+   npm run dev
+   ```
+3. Para construir o ejecutar en producción, usa el script correspondiente si está definido en `package.json`.
+
+## Configuración del entorno
+
+El backend puede requerir variables de entorno para la configuración de la base de datos, puerto y seguridad.
+Coloca estas variables en un archivo `.env` en la raíz del proyecto si se usa `dotenv`.
+
+Ejemplo de variables de entorno comunes:
+
+```env
+PORT=3000
+DATABASE_URL=...
+```
+
+## Rutas principales de la API
+
+Las rutas pueden variar según la implementación, pero generalmente incluyen los siguientes endpoints:
+
+- `GET /api/tasks` - Obtener todas las tareas.
+- `GET /api/tasks/:id` - Obtener una tarea específica.
+- `POST /api/tasks` - Crear una nueva tarea.
+- `PUT /api/tasks/:id` - Actualizar una tarea existente.
+- `DELETE /api/tasks/:id` - Eliminar una tarea.
+
+Si el proyecto incluye autenticación, también puede tener:
+
+- `POST /api/auth/login` - Iniciar sesión.
+- `POST /api/auth/register` - Registrar un nuevo usuario.
+
+## Estructura sugerida del backend
+
+El backend suele organizarse en carpetas como:
+
+- `routes/` o `routers/` para definir las rutas.
+- `controllers/` para la lógica de los endpoints.
+- `models/` para los esquemas de datos o la capa de acceso a la base de datos.
+- `middleware/` para manejo de autenticación, validación y errores.
+
+## Consideraciones técnicas
+
+- API REST con JSON como formato de intercambio.
+- Manejo de errores desde el backend con respuestas HTTP adecuadas.
+- Uso de CORS para permitir peticiones desde el frontend.
+- Validación de datos de entrada en los endpoints.
+
+## Referencias
+
+Revisa `package.json` para ver las dependencias específicas y los scripts disponibles.
 # Herramientas del ecosistema backend y APIs REST
 
 Referencia técnica sobre cuatro herramientas que aparecen habitualmente en proyectos con APIs REST: qué son, qué problema resuelven y en qué contextos se usan.
